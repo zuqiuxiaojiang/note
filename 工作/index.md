@@ -1,3 +1,5 @@
+###### [首页](index.md)
+
 <style>
   .inline-image {
     display: inline-block;
@@ -14,6 +16,7 @@
 <img src="./SDIC.png" alt="示例图片" class="inline-image" />
 <span class="inline-title">应知应会</span>
 </h1>
+
 
 ## 目录：
 
@@ -36,3 +39,4 @@
 [国投生物网络考试系统](http://exam.gtswims.com)
 
 [各类题库](https://sdic.pages.dev/tk/)
+
