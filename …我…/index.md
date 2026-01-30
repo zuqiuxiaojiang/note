@@ -1,4 +1,4 @@
-###### [首页](note/)
+###### [首页](/note/)
 
 <style>
   .inline-image {
@@ -17,7 +17,7 @@
 <span class="inline-title">天使之翼</span>
 </h1>
 
-## …我…：
+## …我…
 
 [Git同步设置](Git同步设置.md)
 
