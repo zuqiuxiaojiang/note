@@ -1,0 +1,149 @@
+/* 设置网页字符编码为UTF-8 */
+/* 响应式设计：确保网页在不同设备上自适应 */
+body {
+  font-family: Arial, sans-serif; /* 设置网页字体为Arial或无衬线字体 */
+  margin: 10px; /* 设置网页内容与边界的外边距为20px */
+}
+
+/* 页面头部样式 */
+.header {
+  display: flex; /* 使用flex布局来对齐头部内容 */
+  align-items: center; /* 垂直居中对齐 */
+  margin-bottom: 20px; /* 头部与下方内容的间距 */
+}
+
+/* 头部图像样式 */
+.header img {
+  margin-right: 10px; /* 头部图像与标题的间距 */
+  width: 50px; /* 图像宽度 */
+  height: auto; /* 图像高度自动适应 */
+}
+
+html {
+  /* 浏览器默认的字体大小和行高 */
+  font-size: 100%; /* 通常等于16px */
+  line-height: 1.15; /* 默认的行高 */
+  -webkit-text-size-adjust: 100%; /* 防止字体缩放 */
+}
+
+/* 标题样式 */
+h1, h2, h3, h4, h5, h6 {
+  /* 标题元素的默认样式 */
+  margin-top: 0.67em; /* 顶部边距 */
+  margin-bottom: 0.67em; /* 底部边距 */
+  font-weight: bold; /* 默认加粗 */
+  line-height: 1.2; /* 行高 */
+}
+
+/* 链接样式 */
+a {
+  margin-right: 10px; /* 每个链接之间的间距 */
+  text-decoration: none; /* 去掉链接下划线 */
+  color: #007BFF; /* 链接颜色 */
+}
+
+/* 表格样式 */
+table {
+  width: 100%; /* 表格宽度自适应容器 */
+  border-collapse: collapse; /* 合并边框 */
+  margin: 0 auto; /* 水平居中 */
+}
+
+th, td {
+  padding: 10px; /* 单元格内边距 */
+  border: 1px solid #ddd; /* 单元格边框样式 */
+  text-align: left; /* 文本对齐方式 */
+}
+
+/* 图片样式 */
+img {
+  max-width: 100%; /* 图片最大宽度为容器宽度 */
+  height: auto; /* 高度自适应 */
+}
+
+/* 音频播放器样式 */
+.audio-player {
+  width: 100%; /* 播放器宽度自适应 */
+  max-width: 500px; /* 最大宽度限制 */
+  margin: 0 auto; /* 水平居中 */
+  background: #f5f5f5; /* 背景颜色 */
+  border: 1px solid #ccc; /* 边框样式 */
+  padding: 10px; /* 内边距 */
+}
+
+.audio-player controls {
+  background: #fff; /* 控件背景颜色 */
+}
+
+.audio-player button {
+  background: none; /* 按钮背景透明 */
+  border: none; /* 移除按钮边框 */
+  cursor: pointer; /* 鼠标悬停时显示指针 */
+}
+
+.audio-player:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 鼠标悬停时添加阴影 */
+}
+
+.audio-player button:hover {
+  background: #ddd; /* 鼠标悬停时按钮背景颜色 */
+}
+
+/* 视频播放器样式 */
+.video-player {
+  position: relative; /* 设置相对定位 */
+  width: 100%; /* 播放器宽度自适应 */
+  max-width: 800px; /* 最大宽度限制 */
+  margin: 0 auto; /* 水平居中 */
+  overflow: hidden; /* 隐藏超出部分 */
+}
+
+.video-player video {
+  width: 100%; /* 视频宽度自适应 */
+  height: auto; /* 高度自适应 */
+}
+
+/* 响应式设计 */
+@media (max-width: 600px) {
+  /* 小屏幕设备 */
+  .audio-player {
+	width: 90%; /* 在小屏幕上缩小播放器宽度 */
+  }
+
+  table {
+	display: block; /* 在小屏幕上将表格转换为块级元素 */
+	overflow-x: auto; /* 水平滚动条 */
+	white-space: nowrap; /* 防止内容换行 */
+  }
+}
+
+@media (max-width: 768px) {
+  /* 平板设备 */
+  img {
+	border-radius: 5px; /* 在小屏幕上添加圆角效果 */
+	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* 添加阴影 */
+  }
+
+  .video-player {
+	max-width: 100%; /* 在小屏幕上调整最大宽度 */
+  }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  /* 平板设备 */
+  .container {
+	padding: 30px; /* 平板设备上的内边距 */
+  }
+}
+
+@media (min-width: 992px) {
+  /* 桌面设备 */
+  .container {
+	padding: 40px; /* 桌面设备上的内边距 */
+  }
+}
+
+.options {
+	list-style: none;
+	padding: 0;
+}
