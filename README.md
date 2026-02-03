@@ -11,7 +11,7 @@
 </style>
 
 <h1>
-<img src="./国旗-球形.png" alt="示例图片" class="inline-image" />
+<img src="./国旗-球形.png" alt="图片" class="inline-image" />
 <span class="inline-title">勝利的凱歌</span>
 </h1>
 
@@ -21,3 +21,15 @@
 
 [工作](工作/index.md)
 
+
+
+
+
+
+
+
+###### 🉑扫码关注下方的WX公众号（左）QQ频道号（右）
+<h1>
+<img src="./WX公众号.jpg" alt="图片" class="inline-image" />
+<img src="./QQ频道号.jpg" alt="图片" class="inline-image" />
+</h1>
