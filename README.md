@@ -29,7 +29,7 @@
 
 
 ###### 🉑扫码关注下方的WX公众号（左）QQ频道号（右）
-<h1>
+<p>
 <img src="./WX公众号.jpg" alt="图片" class="inline-image" />
 <img src="./QQ频道号.jpg" alt="图片" class="inline-image" />
-</h1>
+</p>
