@@ -8,12 +8,10 @@ pkg install git -y
 termux-setup-storage
 
 ### 3. 进入存储目录并创建 Obsidian 文件夹
-cd ~/storage/shared
-mkdir -p Obsidian
-cd Obsidian
+cd storage/emulated/0
 ### 4. 配置 Git 全局身份（修改引号内容为你的信息）
-git config --global user.name "你的英文用户名"
-git config --global user.email "你的Gitee注册邮箱"
+git config --global user.name "zuqiuxiaojiang"
+git config --global user.email "553777402@qq.com"
 
 ### 5. 验证配置
 echo "用户名：" && git config --global user.name
@@ -29,7 +27,7 @@ rm -rf note
 git clone https://用户名:Token@gitee.com/用户名/note.git
 
 ### 示例（仅供格式参考，请勿直接复制）：
-### git clone https://tianshizhiyi:b289b793c879211cde476eefcf668900@gitee.com/tianshizhiyi/note.git
+git clone https://zuqiuxiaojiang:私人令牌@gitee.com/zuqiuxiaojiang/note.git
 
 ###### 需修改：将两处 用户名 替换为 Gitee 英文用户名，将 Token 替换为 32 位私人令牌
 
