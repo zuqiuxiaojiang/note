@@ -25,4 +25,4 @@
 
 | VX公众号 | QQ频道号 |
 | :---: | :---: |
-| <img src="./WX公众号.jpg" width="100"> | <img src="./QQ频道号.jpg" width="100"> |
+| <img src="./WX公众号.jpg" width="50"> | <img src="./QQ频道号.jpg" width="50"> |
