@@ -15,14 +15,10 @@
 <span class="inline-title">勝利的凱歌</span>
 </h1>
 
-[首页](index.md) | 
+[关于](README.md) | 
 
 ## 🚏🚶⛩️🏃：
 
-[主站](https://zuqiuxiaojiang.github.io) | [-站](https://zuqiuxiaojiang.github.io/-) | [_站](https://zuqiuxiaojiang.github.io/_)
+[…我…](…我…/index.md)
 
-###### *📱🉑扫码下方并关注*
-
-| VX公众号 | QQ频道号 |
-| :---: | :---: |
-| <img src="./WX公众号.jpg" width="100"> | <img src="./QQ频道号.jpg" width="100"> |
+[工作](工作/index.md)

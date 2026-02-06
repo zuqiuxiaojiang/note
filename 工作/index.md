@@ -16,7 +16,7 @@
 <span class="inline-title">应知应会</span>
 </h1>
 
-[首页](../README.md) | 
+[首页](../index.md) | 
 
 ## 目录：
 

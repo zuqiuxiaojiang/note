@@ -16,7 +16,7 @@
 <span class="inline-title">天使之翼</span>
 </h1>
 
-[首页](../README.md)
+[首页](../index.md)
 
 ## …我…:
 ###### *欲查看，请在地址栏末尾输入以下文件名*。
