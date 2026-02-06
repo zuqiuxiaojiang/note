@@ -28,8 +28,8 @@
 
 
 
-###### *🉑扫码关注下方的WX公众号（左）QQ频道号（右）*
-<p>
-<img src="./WX公众号.jpg" alt="图片" class="inline-image" />
-<img src="./QQ频道号.jpg" alt="图片" class="inline-image" />
-</p>
+###### *📱🉑扫码下方并关注*
+
+| VX公众号 | QQ频道号 |
+| :---: | :---: |
+| <img src="./WX公众号.jpg" width="200"> | <img src="./QQ频道号.jpg" width="200"> |
