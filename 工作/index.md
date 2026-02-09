@@ -36,6 +36,8 @@
 
 [数字国投APP](https://newapp.sdic.com.cn)
 
+[国投幸福家](https://home.sdic.com.cn)
+
 [国投生物网络考试系统](http://exam.gtswims.com)
 
 [各类题库](https://sdic.pages.dev/tk/)
