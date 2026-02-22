@@ -1,9 +1,6 @@
 <!-- 引入外部CSS文件 -->
 <link rel="stylesheet" href="styles.css">
 
-<!-- 加载JavaScript文件 -->
-<script src="script.js"></script>
-
 <!--在<head>后加入如下代码（设置页面过期）-->
 <meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="pragma" content="no-cache">
@@ -21,7 +18,7 @@ function password() {
         var pass1 = prompt('㊗️您考試💯。請輸入：逢考必過', '逢考必過');
         if (!pass1) { // 如果用户取消输入
             alert('您取消了操作，页面将返回上一页');
-            window.location.replace("https://sdic.pages.dev"); // 替换为上一页的地址
+            window.location.replace("https://zuqiuxiaojiang.github.io"); // 替换为上一页的地址
             return; // 提前退出函数
         }
         if (correctPasswords.includes(pass1)) { // 检查密码是否在数组中
@@ -33,7 +30,7 @@ function password() {
         }
     }
     alert('您已用完所有尝试机会，页面将返回上一页');
-    window.location.replace("https://sdic.pages.dev"); // 替换为上一页的地址
+    window.location.replace("https://zuqiuxiaojiang.github.io"); // 替换为上一页的地址
     return "密码验证失败"; // 返回一个明确的值
 }
 
