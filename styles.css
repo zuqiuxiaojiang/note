@@ -147,3 +147,14 @@ img {
 	list-style: none;
 	padding: 0;
 }
+
+  /* 图标与标题在同一行 */
+.inline-image {
+  display: inline-block;
+  height: 45px;
+  vertical-align: middle;
+}
+.inline-title {
+  display: inline-block;
+  vertical-align: middle;
+}
