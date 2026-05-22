@@ -53,8 +53,8 @@ for team in teams:
         if isinstance(m, (int, float)):
             if m < 2:  水分扣分 -= 5
             if m > 2:  水分扣分 -= 10
-            if m < 10.5: 水分扣分 -= 5
-            if m > 11.5: 水分扣分 -= 10
+#            if m < 10.5: 水分扣分 -= 5
+#            if m > 11.5: 水分扣分 -= 10
         
         明细.append({
             "日期": p.get("日期", "-"),
