@@ -3,6 +3,7 @@ name: Build Report
 on:
   push:
     branches: [main]
+  workflow_dispatch:        # ← 加这行，开启手动触发
 
 jobs:
   build:
@@ -16,8 +17,9 @@ jobs:
           python-version: '3.11'
           
       - name: Install dependencies
-        run: pip install python-frontmatter
-        
+        run: |
+          pip install python-frontmatter pyyaml
+          
       - name: Generate report
         run: python build.py
         
