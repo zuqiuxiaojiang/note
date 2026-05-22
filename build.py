@@ -1,44 +1,32 @@
 import frontmatter
 import glob
 import os
-import sys
 from collections import defaultdict
 
-print("=== 开始运行 ===")
-print("当前目录:", os.getcwd())
-print("目录内容:", os.listdir("."))
-
-# 先检查生产数据文件夹是否存在
-target_dir = "生产数据"
-print(f"检查文件夹 '{target_dir}':", os.path.exists(target_dir))
-if os.path.exists(target_dir):
-    print("子目录:", os.listdir(target_dir))
-
-# 查找所有 md 文件
-md_files = glob.glob(f"{target_dir}/**/*.md", recursive=True)
-print("找到的 md 文件:", md_files)
-
-if not md_files:
-    print("错误：没有找到任何 md 文件，请检查文件夹名是否为 '生产数据'")
-    sys.exit(1)
-
+# 扫描所有笔记
 pages = []
-for path in md_files:
+for path in glob.glob("生产数据/**/*.md", recursive=True):
+    post = frontmatter.load(path)
+    data = post.metadata
+    if data.get("班组"):
+        pages.append(data)
+
+# 安全读取数字：None、空字符串、不存在的键，都返回 0
+def safe_num(p, key):
+    v = p.get(key)
+    if v is None or v == "":
+        return 0
     try:
-        post = frontmatter.load(path)
-        data = post.metadata
-        print(f"读取 {path}: {data}")
-        if data.get("班组"):
-            pages.append(data)
-    except Exception as e:
-        print(f"读取 {path} 失败: {e}")
+        return float(v)
+    except (ValueError, TypeError):
+        return 0
 
-print(f"成功读取 {len(pages)} 条记录")
+# 判断是否为正常班（有有效数字）
+def has_valid_data(p):
+    v = p.get("蒸汽消耗")
+    return isinstance(v, (int, float)) and v is not None
 
-if not pages:
-    print("错误：没有读取到任何有效记录，请检查 frontmatter 格式")
-    sys.exit(1)
-
+# 按班组分组
 teams = ["甲班", "乙班", "丙班", "丁班"]
 team_stats = {}
 
@@ -52,47 +40,43 @@ for team in teams:
     明细 = []
     
     for p in rows:
-        has_data = False
-        try:
-            sd = p.get("蒸汽消耗")
-            has_data = isinstance(sd, (int, float)) and not (sd != sd)  # 排除 NaN
-        except:
-            has_data = False
+        has_data = has_valid_data(p)
         
         if has_data:
-            蒸汽合计 += float(p.get("蒸汽消耗", 0) or 0)
-            糖浆合计 += float(p.get("糖浆加量", 0) or 0)
-            水合计 += float(p.get("水消耗", 0) or 0)
-            电合计 += float(p.get("电消耗", 0) or 0)
+            蒸汽合计 += safe_num(p, "蒸汽消耗")
+            糖浆合计 += safe_num(p, "糖浆加量")
+            水合计   += safe_num(p, "水消耗")
+            电合计   += safe_num(p, "电消耗")
             正常班数 += 1
         
         m = p.get("水分")
         if isinstance(m, (int, float)):
-            if m < 2: 水分扣分 -= 5
-            if m > 2: 水分扣分 -= 10
+            if m < 2:  水分扣分 -= 5
+            if m > 2:  水分扣分 -= 10
             if m < 10.5: 水分扣分 -= 5
             if m > 11.5: 水分扣分 -= 10
         
         明细.append({
-            "日期": str(p.get("日期", "-")),
-            "类型": str(p.get("类型", "正常")),
+            "日期": p.get("日期", "-"),
+            "类型": p.get("类型", "正常"),
             "蒸汽": p.get("蒸汽消耗") if has_data else "-",
             "糖浆": p.get("糖浆加量") if has_data else "-",
             "水": p.get("水消耗") if has_data else "-",
             "电": p.get("电消耗") if has_data else "-",
-            "水分": str(p.get("水分", "-"))
+            "水分": p.get("水分", "-")
         })
     
-    比 = round(蒸汽合计 / 糖浆合计, 4) if 糖浆合计 else "-"
-    水均 = round(水合计 / 正常班数, 2) if 正常班数 else "-"
-    电均 = round(电合计 / 正常班数, 1) if 正常班数 else "-"
+    蒸汽糖浆比 = round(蒸汽合计 / 糖浆合计, 4) if 糖浆合计 else "-"
+    水平均 = round(水合计 / 正常班数, 2) if 正常班数 else "-"
+    电平均 = round(电合计 / 正常班数, 1) if 正常班数 else "-"
     
     team_stats[team] = {
         "蒸汽": 蒸汽合计, "糖浆": 糖浆合计, "水": round(水合计, 1), "电": 电合计,
-        "扣分": 水分扣分, "班数": 正常班数, "比": 比, "水均": 水均, "电均": 电均,
+        "扣分": 水分扣分, "班数": 正常班数, "比": 蒸汽糖浆比, "水均": 水平均, "电均": 电平均,
         "明细": 明细
     }
 
+# 排名
 stats_list = [(t, team_stats[t]) for t in teams if t in team_stats]
 
 def rank(arr, key, asc=True):
@@ -104,7 +88,7 @@ def rank(arr, key, asc=True):
 
 r_ratio = rank(stats_list, "比", True)
 r_water = rank(stats_list, "水均", True)
-r_elec = rank(stats_list, "电均", True)
+r_elec  = rank(stats_list, "电均", True)
 
 for t, s in stats_list:
     s["排名比"] = r_ratio.get(s["比"], "-")
@@ -118,6 +102,7 @@ r_score = rank([(t, s) for t, s in stats_list], "积分", True)
 for t, s in stats_list:
     s["总排名"] = r_score.get(s["积分"], "-")
 
+# 生成 README.md
 md = ["# 生产数据报表\n\n", "## 📊 消耗统计汇总\n\n"]
 md.append("| 班组 | 蒸汽用量 | 糖浆加量 | 水量 | 电量 | 水分扣分 |\n")
 md.append("|:---:|:---:|:---:|:---:|:---:|:---:|\n")
@@ -157,5 +142,3 @@ for t in teams:
 
 with open("README.md", "w", encoding="utf-8") as f:
     f.writelines(md)
-
-print("=== 成功生成 README.md ===")
