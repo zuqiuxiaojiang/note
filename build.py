@@ -11,7 +11,7 @@ for path in glob.glob("生产数据/**/*.md", recursive=True):
     if data.get("班组"):
         pages.append(data)
 
-# 安全读取数字：None、空字符串、不存在的键，都返回 0
+# 安全读取数字
 def safe_num(p, key):
     v = p.get(key)
     if v is None or v == "":
@@ -21,7 +21,6 @@ def safe_num(p, key):
     except (ValueError, TypeError):
         return 0
 
-# 判断是否为正常班（有有效数字）
 def has_valid_data(p):
     v = p.get("蒸汽消耗")
     return isinstance(v, (int, float)) and v is not None
@@ -29,6 +28,7 @@ def has_valid_data(p):
 # 按班组分组
 teams = ["甲班", "乙班", "丙班", "丁班"]
 team_stats = {}
+all_repairs = []  # ← 新增：收集所有检维修
 
 for team in teams:
     rows = [p for p in pages if p.get("班组") == team]
@@ -50,11 +50,22 @@ for team in teams:
             正常班数 += 1
         
         m = p.get("水分")
+        本条扣分 = 0
         if isinstance(m, (int, float)):
-            if m < 2:  水分扣分 -= 5
-            if m > 2:  水分扣分 -= 10
-#            if m < 10.5: 水分扣分 -= 5
-#            if m > 11.5: 水分扣分 -= 10
+            if m < 2:  本条扣分 -= 5
+            if m > 2:  本条扣分 -= 10
+#            if m < 10.5: 本条扣分 -= 5
+#            if m > 11.5: 本条扣分 -= 10
+            水分扣分 += 本条扣分
+        
+        # ← 新增：收集检维修记录
+        if p.get("类型") == "检维修":
+            all_repairs.append({
+                "班组": team,
+                "日期": p.get("日期", "-"),
+                "水分": m,
+                "扣分": 本条扣分
+            })
         
         明细.append({
             "日期": p.get("日期", "-"),
@@ -126,6 +137,17 @@ for t in teams:
     if t not in team_stats: continue
     s = team_stats[t]
     md.append(f"| {t} | {s['排名比']} | {s['排名水']} | {s['排名电']} | {s['积分']} | {s['总排名']} |\n")
+
+# ← 新增：检维修记录汇总表（没有检维修时不显示）
+if all_repairs:
+    md.append("\n## 🔧 检维修记录\n\n")
+#    md.append("| 班组 | 日期 | 水分 | 扣分 |\n")
+    md.append("| 班组 | 日期 |\n")
+#    md.append("|:---:|:---:|:---:|:---:|\n")
+    md.append("|:---:|:---:|\n")
+    for r in all_repairs:
+#        md.append(f"| {r['班组']} | {r['日期']} | {r['水分']} | {r['扣分']} |\n")
+        md.append(f"| {r['班组']} | {r['日期']} |\n")
 
 md.append("\n---\n\n## 📋 各班明细\n\n")
 for t in teams:
