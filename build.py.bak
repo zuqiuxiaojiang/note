@@ -140,5 +140,5 @@ for t in teams:
     md.append(f"| **平均** | | 比值: {s['比']} | | 水均: {s['水均']} | 电均: {s['电均']} | |\n")
     md.append("\n")
 
-with open("index.md", "w", encoding="utf-8") as f:
+with open("README.md", "w", encoding="utf-8") as f:
     f.writelines(md)
