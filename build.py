@@ -2,7 +2,6 @@ import frontmatter
 import glob
 import os
 import re
-from collections import defaultdict
 
 # ========== 手动设置报表网址 ==========
 report_url = "https://你的用户名.github.io/你的仓库名/"
@@ -34,29 +33,22 @@ def safe_num(p, key):
 
 # ========== 水分状态与扣分自动判断（两套标准） ==========
 def get_water_status(val):
-    """
-    自动判断使用哪套标准：
-    - <=5  使用 123 标准（=2 合格）
-    - >5   使用考核标准（10.5~11.5 合格）
-    返回: (emoji, 扣分)
-    """
     if val <= 5:
         if val == 2:
             return ("✅", 0)
         elif val < 2:
             return ("🔵", -5)
-        else:  # >2
+        else:
             return ("🔴", -10)
     else:
         if 10.5 <= val <= 11.5:
             return ("✅", 0)
         elif val < 10.5:
             return ("🔵", -5)
-        else:  # >11.5
+        else:
             return ("🔴", -10)
 
 def format_water(m):
-    """只返回颜色 emoji，不显示数字"""
     val = clean_number(m)
     if val is None:
         return "-"
@@ -64,7 +56,6 @@ def format_water(m):
     return emoji
 
 def calc_water_score(m):
-    """根据数值自动判断扣分"""
     val = clean_number(m)
     if val is None:
         return 0
@@ -94,7 +85,7 @@ for team in teams:
     蒸汽合计 = 糖浆合计 = 水合计 = 电合计 = 0
     正常班数 = 0
     水分扣分 = 0
-    合格数 = 0      # ← 新增：水分不扣分的班数
+    合格数 = 0
     明细 = []
     
     for p in rows:
@@ -111,11 +102,10 @@ for team in teams:
         本条扣分 = calc_water_score(m)
         水分扣分 += 本条扣分
         
-        # 工艺分合格判断：不扣分就算合格（含空值）
+        # 工艺分合格判断：正常班且不扣分
         if has_data and 本条扣分 == 0:
             合格数 += 1
         
-        # 收集检维修记录
         if p.get("类型") == "检维修":
             all_repairs.append({
                 "班组": team,
@@ -135,8 +125,6 @@ for team in teams:
     蒸汽糖浆比 = round(蒸汽合计 / 糖浆合计, 4) if 糖浆合计 else "-"
     水平均 = round(水合计 / 正常班数, 2) if 正常班数 else "-"
     电平均 = round(电合计 / 正常班数, 1) if 正常班数 else "-"
-    
-    # ← 新增：工艺分 = 40 ÷ 班数 × 合格数
     工艺分 = round(40 / 正常班数 * 合格数, 2) if 正常班数 > 0 else 0
     
     team_stats[team] = {
@@ -201,7 +189,6 @@ for t in teams:
     s = team_stats[t]
     md.append(f"| {t} | {s['排名比']} | {s['排名水']} | {s['排名电']} | {s['积分']} | {s['总排名']} |\n")
 
-# 检维修记录（无记录时不显示）
 if all_repairs:
     md.append("\n## 🔧 检维修记录\n\n")
     md.append("| 班组 | 日期 |\n")
@@ -219,7 +206,7 @@ for t in teams:
     for d in s["明细"]:
         md.append(f"| {d['日期']} | {d['类型']} | {d['蒸汽']} | {d['糖浆']} | {d['水']} | {d['电']} | {format_water(d['水分'])} |\n")
     md.append(f"| **小计** | 正常班: {s['班数']} | {s['蒸汽']} | {s['糖浆']} | {s['水']} | {s['电']} | {s['扣分']} |\n")
-    md.append(f"| **平均** | | 比值: {s['比']} | | 水均: {s['水均']} | 电均: {s['电均']} | |\n")
+    md.append(f"| **平均** | 工艺分: {s['工艺分']} | 比值: {s['比']} | | 水均: {s['水均']} | 电均: {s['电均']} | |\n")
     md.append("\n")
 
 with open("README.md", "w", encoding="utf-8") as f:
