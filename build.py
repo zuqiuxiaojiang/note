@@ -59,18 +59,15 @@ def get_water_status(val):
 
 def format_water(m):
     """只返回颜色 emoji，不显示数字"""
-    if m is None or m == "" or m == "-":
+    val = clean_number(m)
+    if val is None:
         return "-"
-    try:
-        val = float(m)
-        emoji, _ = get_water_status(val)
-        return emoji
-    except (ValueError, TypeError):
-        return str(m)
+    emoji, _ = get_water_status(val)
+    return emoji
 
 def calc_water_score(m):
     """根据数值自动判断扣分"""
-    val = clean_number(m)  # ← 关键：先用 clean_number 转换，兼容字符串数字
+    val = clean_number(m)
     if val is None:
         return 0
     _, score = get_water_status(val)
