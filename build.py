@@ -4,11 +4,6 @@ import os
 import re
 from collections import defaultdict
 
-# ========== 自动获取报表网址 ==========
-repo = os.environ.get("GITHUB_REPOSITORY", "zuqiuxiaojiang/note")
-parts = repo.split('/')
-report_url = f"https://{parts[0]}.github.io/{parts[1]}/" if len(parts) == 2 else "https://zuqiuxiaojiang.github.io/note/"
-
 # ========== 数字清洗：兼容引号、空格、单位、中文符号 ==========
 def clean_number(v):
     if v is None:
