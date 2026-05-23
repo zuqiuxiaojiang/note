@@ -5,7 +5,6 @@ import re
 from collections import defaultdict
 
 # ========== 手动设置报表网址 ==========
-# 改成你的实际地址，例如：https://用户名.github.io/仓库名/
 report_url = "https://zuqiuxiaojiang.github.io/note/"
 
 # ========== 数字清洗：兼容引号、空格、单位、中文符号 ==========
@@ -16,11 +15,8 @@ def clean_number(v):
         return float(v)
     if not isinstance(v, str):
         return None
-    # 去掉中英文引号、首尾空格、全角空格
     s = v.strip().strip('"').strip('"').strip("'").strip("'").strip("‘").strip("’")
-    # 去掉逗号（千分位）
     s = s.replace(",", "").replace("，", "")
-    # 提取开头的数字（支持小数点和负号）
     m = re.match(r'^-?\d+(\.\d+)?', s)
     if m:
         try:
@@ -36,30 +32,48 @@ def safe_num(p, key):
     v = clean_number(p.get(key))
     return v if v is not None else 0
 
-# ========== 水分状态：双标准自动识别，只显示颜色 ==========
+# ========== 水分状态与扣分自动判断（两套标准） ==========
+def get_water_status(val):
+    """
+    自动判断使用哪套标准：
+    - <=5  使用 123 标准（=2 合格）
+    - >5   使用考核标准（10.5~11.5 合格）
+    返回: (emoji, 扣分)
+    """
+    if val <= 5:
+        # 123 标准
+        if val == 2:
+            return ("✅", 0)
+        elif val < 2:
+            return ("🔵", -5)
+        else:  # >2
+            return ("🔴", -10)
+    else:
+        # 考核标准 10.5~11.5
+        if 10.5 <= val <= 11.5:
+            return ("✅", 0)
+        elif val < 10.5:
+            return ("🔵", -5)
+        else:  # >11.5
+            return ("🔴", -10)
+
 def format_water(m):
+    """只返回颜色 emoji，不显示数字"""
     if m is None or m == "" or m == "-":
         return "-"
     try:
         val = float(m)
-        # 小数值（≤5）自动使用 1/2/3 标准
-        if val <= 5:
-            if val < 2:
-                return "🔵"   # 状态1：偏小
-            elif val == 2:
-                return "🟢"   # 状态2：正常
-            else:
-                return "🔴"   # 状态3：偏大
-        # 大数值（>5）自动使用 10.5~11.5 标准
-        else:
-            if val < 10.5:
-                return "🔵"   # 偏小
-            elif val <= 11.5:
-                return "🟢"   # 合格
-            else:
-                return "🔴"   # 偏大
+        emoji, _ = get_water_status(val)
+        return emoji
     except (ValueError, TypeError):
         return str(m)
+
+def calc_water_score(m):
+    """根据数值自动判断扣分"""
+    if not isinstance(m, (int, float)) or (m != m):  # 排除 NaN
+        return 0
+    _, score = get_water_status(m)
+    return score
 
 # ========== 扫描所有笔记 ==========
 pages = []
@@ -97,13 +111,8 @@ for team in teams:
             正常班数 += 1
         
         m = p.get("水分")
-        本条扣分 = 0
-        if isinstance(m, (int, float)) and not (m != m):  # 排除 NaN
-            if m < 2:  本条扣分 -= 5
-            if m > 2:  本条扣分 -= 10
-            if m < 10.5: 本条扣分 -= 5
-            if m > 11.5: 本条扣分 -= 10
-            水分扣分 += 本条扣分
+        本条扣分 = calc_water_score(m)
+        水分扣分 += 本条扣分
         
         # 收集检维修记录
         if p.get("类型") == "检维修":
