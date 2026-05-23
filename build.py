@@ -4,7 +4,7 @@ import os
 import re
 
 # ========== 手动设置报表网址 ==========
-report_url = "https://你的用户名.github.io/你的仓库名/"
+report_url = "https://zuqiuxiaojiang.github.io/note/"
 
 # ========== 数字清洗：兼容引号、空格、单位、中文符号 ==========
 def clean_number(v):
@@ -102,7 +102,6 @@ for team in teams:
         本条扣分 = calc_water_score(m)
         水分扣分 += 本条扣分
         
-        # 工艺分合格判断：正常班且不扣分
         if has_data and 本条扣分 == 0:
             合格数 += 1
         
@@ -166,14 +165,16 @@ md = [
     f"🌐 [在线报表]({report_url})\n\n",
     "## 📊 消耗统计汇总\n\n"
 ]
-md.append("| 班组 | 蒸汽用量 | 糖浆加量 | 水量 | 电量 | 水分扣分 | 工艺分 |\n")
-md.append("|:---:|:---:|:---:|:---:|:---:|:---:|:---:|\n")
+# ← 汇总表去掉工艺分列，恢复6列
+md.append("| 班组 | 蒸汽用量 | 糖浆加量 | 水量 | 电量 | 水分扣分 |\n")
+md.append("|:---:|:---:|:---:|:---:|:---:|:---:|\n")
 for t in teams:
     if t not in team_stats: continue
     s = team_stats[t]
-    md.append(f"| {t} | {s['蒸汽']} | {s['糖浆']} | {s['水']} | {s['电']} | {s['扣分']} | {s['工艺分']} |\n")
+    md.append(f"| {t} | {s['蒸汽']} | {s['糖浆']} | {s['水']} | {s['电']} | {s['扣分']} |\n")
 
 md.append("\n## 📈 平均分\n\n")
+# ← 平均表保留工艺分
 md.append("| 班组 | 蒸汽÷糖浆 | 水量÷正常班 | 电量÷正常班 | 工艺分 |\n")
 md.append("|:---:|:---:|:---:|:---:|:---:|\n")
 for t in teams:
@@ -206,6 +207,7 @@ for t in teams:
     for d in s["明细"]:
         md.append(f"| {d['日期']} | {d['类型']} | {d['蒸汽']} | {d['糖浆']} | {d['水']} | {d['电']} | {format_water(d['水分'])} |\n")
     md.append(f"| **小计** | 正常班: {s['班数']} | {s['蒸汽']} | {s['糖浆']} | {s['水']} | {s['电']} | {s['扣分']} |\n")
+    # ← 平均行保留工艺分
     md.append(f"| **平均** | 工艺分: {s['工艺分']} | 比值: {s['比']} | | 水均: {s['水均']} | 电均: {s['电均']} | |\n")
     md.append("\n")
 
