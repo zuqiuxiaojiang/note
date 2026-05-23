@@ -5,7 +5,7 @@ import re
 from collections import defaultdict
 
 # ========== 手动设置报表网址 ==========
-report_url = "https://zuqiuxiaojiang.github.io/note/"
+report_url = "https://你的用户名.github.io/你的仓库名/"
 
 # ========== 数字清洗：兼容引号、空格、单位、中文符号 ==========
 def clean_number(v):
@@ -41,7 +41,6 @@ def get_water_status(val):
     返回: (emoji, 扣分)
     """
     if val <= 5:
-        # 123 标准
         if val == 2:
             return ("✅", 0)
         elif val < 2:
@@ -49,7 +48,6 @@ def get_water_status(val):
         else:  # >2
             return ("🔴", -10)
     else:
-        # 考核标准 10.5~11.5
         if 10.5 <= val <= 11.5:
             return ("✅", 0)
         elif val < 10.5:
@@ -96,6 +94,7 @@ for team in teams:
     蒸汽合计 = 糖浆合计 = 水合计 = 电合计 = 0
     正常班数 = 0
     水分扣分 = 0
+    合格数 = 0      # ← 新增：水分不扣分的班数
     明细 = []
     
     for p in rows:
@@ -111,6 +110,10 @@ for team in teams:
         m = p.get("水分")
         本条扣分 = calc_water_score(m)
         水分扣分 += 本条扣分
+        
+        # 工艺分合格判断：不扣分就算合格（含空值）
+        if has_data and 本条扣分 == 0:
+            合格数 += 1
         
         # 收集检维修记录
         if p.get("类型") == "检维修":
@@ -133,9 +136,13 @@ for team in teams:
     水平均 = round(水合计 / 正常班数, 2) if 正常班数 else "-"
     电平均 = round(电合计 / 正常班数, 1) if 正常班数 else "-"
     
+    # ← 新增：工艺分 = 40 ÷ 班数 × 合格数
+    工艺分 = round(40 / 正常班数 * 合格数, 2) if 正常班数 > 0 else 0
+    
     team_stats[team] = {
         "蒸汽": 蒸汽合计, "糖浆": 糖浆合计, "水": round(水合计, 1), "电": 电合计,
-        "扣分": 水分扣分, "班数": 正常班数, "比": 蒸汽糖浆比, "水均": 水平均, "电均": 电平均,
+        "扣分": 水分扣分, "班数": 正常班数, "合格数": 合格数, "工艺分": 工艺分,
+        "比": 蒸汽糖浆比, "水均": 水平均, "电均": 电平均,
         "明细": 明细
     }
 
@@ -171,12 +178,12 @@ md = [
     f"🌐 [在线报表]({report_url})\n\n",
     "## 📊 消耗统计汇总\n\n"
 ]
-md.append("| 班组 | 蒸汽用量 | 糖浆加量 | 水量 | 电量 | 水分扣分 |\n")
-md.append("|:---:|:---:|:---:|:---:|:---:|:---:|\n")
+md.append("| 班组 | 蒸汽用量 | 糖浆加量 | 水量 | 电量 | 水分扣分 | 工艺分 |\n")
+md.append("|:---:|:---:|:---:|:---:|:---:|:---:|:---:|\n")
 for t in teams:
     if t not in team_stats: continue
     s = team_stats[t]
-    md.append(f"| {t} | {s['蒸汽']} | {s['糖浆']} | {s['水']} | {s['电']} | {s['扣分']} |\n")
+    md.append(f"| {t} | {s['蒸汽']} | {s['糖浆']} | {s['水']} | {s['电']} | {s['扣分']} | {s['工艺分']} |\n")
 
 md.append("\n## 📈 平均分\n\n")
 md.append("| 班组 | 蒸汽÷糖浆 | 水量÷正常班 | 电量÷正常班 | 工艺分 |\n")
@@ -184,7 +191,7 @@ md.append("|:---:|:---:|:---:|:---:|:---:|\n")
 for t in teams:
     if t not in team_stats: continue
     s = team_stats[t]
-    md.append(f"| {t} | {s['比']} | {s['水均']} | {s['电均']} | 40 |\n")
+    md.append(f"| {t} | {s['比']} | {s['水均']} | {s['电均']} | {s['工艺分']} |\n")
 
 md.append("\n## 🏆 积分排名\n\n")
 md.append("| 班组 | 蒸汽÷糖浆排名 | 水消耗排名 | 电消耗排名 | 各班积分 | 最低消耗排名 |\n")
