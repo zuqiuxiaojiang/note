@@ -70,9 +70,10 @@ def format_water(m):
 
 def calc_water_score(m):
     """根据数值自动判断扣分"""
-    if not isinstance(m, (int, float)) or (m != m):  # 排除 NaN
+    val = clean_number(m)  # ← 关键：先用 clean_number 转换，兼容字符串数字
+    if val is None:
         return 0
-    _, score = get_water_status(m)
+    _, score = get_water_status(val)
     return score
 
 # ========== 扫描所有笔记 ==========
