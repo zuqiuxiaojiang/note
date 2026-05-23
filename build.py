@@ -67,18 +67,18 @@ def get_water_status(val):
     """
     if val <= 5:
         if val == 2:
-            return ("✅", 0)
+            return ("🟢", 0)
         elif val < 2:
-            return ("🔵", -5)
+            return ("🟠", -5)
         else:
-            return ("🔴", -10)
+            return ("🔵", -10)
     else:
         if 10.5 <= val <= 11.5:
-            return ("✅", 0)
+            return ("🟢", 0)
         elif val < 10.5:
-            return ("🔵", -5)
+            return ("🟠", -5)
         else:
-            return ("🔴", -10)
+            return ("🔵", -10)
 
 
 def format_water(m):
