@@ -1,0 +1,197 @@
+
+```dataviewjs
+const pages = dv.pages('"生产数据"').where(p => p.班组);
+
+// ========== 数字清洗 ==========
+function cleanNumber(v) {
+  if (v === undefined || v === null) return null;
+  if (typeof v === "number") return v;
+  if (typeof v !== "string") return null;
+  let s = v.trim()
+    .replace(/^["'‘’"'"'"]+|["'‘’"'"'"]+$/g, "")
+    .replace(/,/g, "")
+    .replace(/，/g, "");
+  let m = s.match(/^-?\d+(\.\d+)?/);
+  if (m) {
+    let n = parseFloat(m[0]);
+    return isNaN(n) ? null : n;
+  }
+  return null;
+}
+
+function hasValidData(p) {
+  return cleanNumber(p.蒸汽消耗) !== null;
+}
+
+function safeNum(p, key) {
+  let v = cleanNumber(p[key]);
+  return v !== null ? v : 0;
+}
+
+// ========== 水分状态与扣分（两套标准自动判断） ==========
+function getWaterStatus(val) {
+  if (val <= 5) {
+    if (val === 2) return ["✅", 0];
+    if (val < 2) return ["🔵", -5];
+    return ["🔴", -10];
+  } else {
+    if (val >= 10.5 && val <= 11.5) return ["✅", 0];
+    if (val < 10.5) return ["🔵", -5];
+    return ["🔴", -10];
+  }
+}
+
+function formatWater(m) {
+  let val = cleanNumber(m);
+  if (val === null) return "-";
+  let [emoji, score] = getWaterStatus(val);
+  return emoji;
+}
+
+function calcWaterScore(m) {
+  let val = cleanNumber(m);
+  if (val === null) return 0;
+  let [emoji, score] = getWaterStatus(val);
+  return score;
+}
+
+// ========== 按班组统计 ==========
+const teams = ["甲班", "乙班", "丙班", "丁班"];
+const teamStats = {};
+const allRepairs = [];
+
+teams.forEach(team => {
+  const rows = pages.where(p => p.班组 === team).sort(p => p.日期).array();
+  if (rows.length === 0) return;
+  
+  let 蒸汽合计 = 0, 糖浆合计 = 0, 水合计 = 0, 电合计 = 0;
+  let 正常班数 = 0, 水分扣分 = 0, 合格数 = 0;
+  const 明细 = [];
+  
+  rows.forEach(p => {
+    const hasData = hasValidData(p);
+    
+    if (hasData) {
+      蒸汽合计 += safeNum(p, "蒸汽消耗");
+      糖浆合计 += safeNum(p, "糖浆加量");
+      水合计   += safeNum(p, "水消耗");
+      电合计   += safeNum(p, "电消耗");
+      正常班数 += 1;
+    }
+    
+    const m = p.水分;
+    const 本条扣分 = calcWaterScore(m);
+    水分扣分 += 本条扣分;
+    
+    if (hasData && 本条扣分 === 0) {
+      合格数 += 1;
+    }
+    
+    if (p.类型 === "检维修") {
+      allRepairs.push({
+        班组: team,
+        日期: p.日期 || "-"
+      });
+    }
+    
+    明细.push({
+      日期: p.日期 || "-",
+      类型: p.类型 || "正常",
+      蒸汽: hasData ? p.蒸汽消耗 : "-",
+      糖浆: hasData ? p.糖浆加量 : "-",
+      水: hasData ? p.水消耗 : "-",
+      电: hasData ? p.电消耗 : "-",
+      水分: formatWater(p.水分)
+    });
+  });
+  
+  const 蒸汽糖浆比 = 糖浆合计 ? parseFloat((蒸汽合计 / 糖浆合计).toFixed(4)) : "-";
+  const 水平均 = 正常班数 ? parseFloat((水合计 / 正常班数).toFixed(2)) : "-";
+  const 电平均 = 正常班数 ? parseFloat((电合计 / 正常班数).toFixed(1)) : "-";
+  const 工艺分 = 正常班数 ? parseFloat((40 / 正常班数 * 合格数).toFixed(2)) : 0;
+  
+  teamStats[team] = {
+    蒸汽: 蒸汽合计, 糖浆: 糖浆合计, 水: 水合计.toFixed(1), 电: 电合计,
+    扣分: 水分扣分, 班数: 正常班数, 合格数: 合格数, 工艺分: 工艺分,
+    比: 蒸汽糖浆比, 水均: 水平均, 电均: 电平均,
+    明细: 明细
+  };
+});
+
+const statsList = teams.map(t => [t, teamStats[t]]).filter(x => x[1]);
+
+function rank(arr, key, asc=true) {
+  const sorted = [...arr].sort((a,b) => {
+    const av = a[1][key], bv = b[1][key];
+    const aok = typeof av === "number", bok = typeof bv === "number";
+    if (!aok && !bok) return 0;
+    if (!aok) return 1;
+    if (!bok) return -1;
+    return asc ? av - bv : bv - av;
+  });
+  const vals = sorted.filter(x => typeof x[1][key] === "number").map(x => x[1][key]);
+  const unique = [...new Set(vals)].sort((a,b) => asc ? a - b : b - a);
+  const map = {};
+  unique.forEach((v, i) => map[v] = i + 1);
+  return map;
+}
+
+const rRatio = rank(statsList, "比", true);
+const rWater = rank(statsList, "水均", true);
+const rElec  = rank(statsList, "电均", true);
+
+statsList.forEach(([t, s]) => {
+  s.排名比 = rRatio[s.比] || "-";
+  s.排名水 = rWater[s.水均] || "-";
+  s.排名电 = rElec[s.电均] || "-";
+  s.积分 = (typeof s.排名比 === "number" ? s.排名比 : 0) +
+           (typeof s.排名水 === "number" ? s.排名水 : 0) +
+           (typeof s.排名电 === "number" ? s.排名电 : 0);
+});
+
+const rScore = rank(statsList, "积分", true);
+statsList.forEach(([t, s]) => {
+  s.总排名 = rScore[s.积分] || "-";
+});
+
+// ========== 汇总仪表盘 ==========
+dv.header(2, "📊 消耗统计汇总");
+dv.table(
+  ["班组","蒸汽用量","糖浆加量","水量","电量","水分扣分"],
+  statsList.map(([t, s]) => [t, s.蒸汽, s.糖浆, s.水, s.电, s.扣分])
+);
+
+dv.header(2, "📈 平均分");
+dv.table(
+  ["班组","蒸汽÷糖浆","水量÷正常班","电量÷正常班","工艺分"],
+  statsList.map(([t, s]) => [t, s.比, s.水均, s.电均, s.工艺分])
+);
+
+dv.header(2, "🏆 积分排名");
+dv.table(
+  ["班组","蒸汽÷糖浆=排名","水消耗排名","电消耗排名","各班积分","最低消耗排名"],
+  statsList.map(([t, s]) => [t, s.排名比, s.排名水, s.排名电, s.积分, s.总排名])
+);
+
+if (allRepairs.length > 0) {
+  dv.header(2, "🔧 检维修记录");
+  dv.table(
+    ["班组","日期"],
+    allRepairs.map(r => [r.班组, r.日期])
+  );
+}
+
+// ========== 各班明细（只保留小计行） ==========
+teams.forEach(team => {
+  const s = teamStats[team];
+  if (!s) return;
+  
+  dv.header(3, "📋 " + team + " 明细");
+  dv.table(
+    ["日期","类型","蒸汽消耗","糖浆加量","水消耗","电消耗","水分"],
+    s.明细.map(d => [d.日期, d.类型, d.蒸汽, d.糖浆, d.水, d.电, d.水分]).concat([
+      ["**小计**", "正常班: " + s.班数, s.蒸汽, s.糖浆, s.水, s.电, s.扣分]
+    ])
+  );
+});
+```
