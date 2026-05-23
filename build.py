@@ -4,6 +4,10 @@ import os
 import re
 from collections import defaultdict
 
+# ========== 手动设置报表网址 ==========
+# 改成你的实际地址，例如：https://用户名.github.io/仓库名/
+report_url = "https://zuqiuxiaojiang.github.io/note/"
+
 # ========== 数字清洗：兼容引号、空格、单位、中文符号 ==========
 def clean_number(v):
     if v is None:
@@ -12,8 +16,11 @@ def clean_number(v):
         return float(v)
     if not isinstance(v, str):
         return None
+    # 去掉中英文引号、首尾空格、全角空格
     s = v.strip().strip('"').strip('"').strip("'").strip("'").strip("‘").strip("’")
+    # 去掉逗号（千分位）
     s = s.replace(",", "").replace("，", "")
+    # 提取开头的数字（支持小数点和负号）
     m = re.match(r'^-?\d+(\.\d+)?', s)
     if m:
         try:
@@ -29,31 +36,28 @@ def safe_num(p, key):
     v = clean_number(p.get(key))
     return v if v is not None else 0
 
-# ========== 水分状态：两种标准同时显示 ==========
+# ========== 水分状态：双标准自动识别，只显示颜色 ==========
 def format_water(m):
     if m is None or m == "" or m == "-":
         return "-"
     try:
         val = float(m)
-        
-        # 简化输入标准（1,2,3）
-        if val == 2:
-            simple = f"🟢{val}"
-        elif val < 2:
-            simple = f"🔵{val}"
+        # 小数值（≤5）自动使用 1/2/3 标准
+        if val <= 5:
+            if val < 2:
+                return "🔵"   # 状态1：偏小
+            elif val == 2:
+                return "🟢"   # 状态2：正常
+            else:
+                return "🔴"   # 状态3：偏大
+        # 大数值（>5）自动使用 10.5~11.5 标准
         else:
-            simple = f"🔴{val}"
-        
-        # 标准考核（10.5~11.5）
-        if 10.5 <= val <= 11.5:
-            standard = f"✅{val}"
-        elif val < 10.5:
-            standard = f"🔵{val}"
-        else:
-            standard = f"🔴{val}"
-        
-        # 同时显示两种判定
-        return f"{simple}/{standard}"
+            if val < 10.5:
+                return "🔵"   # 偏小
+            elif val <= 11.5:
+                return "🟢"   # 合格
+            else:
+                return "🔴"   # 偏大
     except (ValueError, TypeError):
         return str(m)
 
@@ -94,13 +98,14 @@ for team in teams:
         
         m = p.get("水分")
         本条扣分 = 0
-        if isinstance(m, (int, float)) and not (m != m):
+        if isinstance(m, (int, float)) and not (m != m):  # 排除 NaN
             if m < 2:  本条扣分 -= 5
             if m > 2:  本条扣分 -= 10
             if m < 10.5: 本条扣分 -= 5
             if m > 11.5: 本条扣分 -= 10
             水分扣分 += 本条扣分
         
+        # 收集检维修记录
         if p.get("类型") == "检维修":
             all_repairs.append({
                 "班组": team,
@@ -182,6 +187,7 @@ for t in teams:
     s = team_stats[t]
     md.append(f"| {t} | {s['排名比']} | {s['排名水']} | {s['排名电']} | {s['积分']} | {s['总排名']} |\n")
 
+# 检维修记录（无记录时不显示）
 if all_repairs:
     md.append("\n## 🔧 检维修记录\n\n")
     md.append("| 班组 | 日期 |\n")
@@ -194,7 +200,7 @@ for t in teams:
     if t not in team_stats: continue
     s = team_stats[t]
     md.append(f"### {t}\n\n")
-    md.append("| 日期 | 类型 | 蒸汽消耗 | 糖浆加量 | 水消耗 | 电消耗 | 水分(简/标) |\n")
+    md.append("| 日期 | 类型 | 蒸汽消耗 | 糖浆加量 | 水消耗 | 电消耗 | 水分 |\n")
     md.append("|:---:|:---:|:---:|:---:|:---:|:---:|:---:|\n")
     for d in s["明细"]:
         md.append(f"| {d['日期']} | {d['类型']} | {d['蒸汽']} | {d['糖浆']} | {d['水']} | {d['电']} | {format_water(d['水分'])} |\n")
