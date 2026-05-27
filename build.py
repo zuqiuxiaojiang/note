@@ -148,6 +148,7 @@ def calc_team_stats(pages):
         
         蒸汽合计 = 糖浆合计 = 水合计 = 电合计 = 0
         正常班数 = 0
+        检维修数 = 0
         水分扣分 = 0
         合格数 = 0
         明细 = []
@@ -162,6 +163,9 @@ def calc_team_stats(pages):
                 水合计   += safe_num(p, "水消耗")
                 电合计   += safe_num(p, "电消耗")
                 正常班数 += 1
+            
+            if is_repair:
+                检维修数 += 1
             
             m = p.get("水分")
             本条扣分 = calc_water_score(m)
@@ -203,8 +207,8 @@ def calc_team_stats(pages):
         工艺分 = round(process_base_score / 正常班数 * 合格数, 2) if 正常班数 > 0 else 0
         
         team_stats[team] = {
-            "蒸汽": 蒸汽合计, "糖浆": 糖浆合计, "水": round(水合计, 1), "电": 电合计,
-            "扣分": 水分扣分, "班数": 正常班数, "合格数": 合格数, "工艺分": 工艺分,
+            "蒸汽": 蒸汽合计, "糖浆": 糖浆合计, "水": 水合计, "电": 电合计,
+            "扣分": 水分扣分, "班数": 正常班数, "检维修数": 检维修数, "合格数": 合格数, "工艺分": 工艺分,
             "比": 蒸汽糖浆比, "水均": 水平均, "电均": 电平均,
             "明细": 明细
         }
@@ -289,18 +293,19 @@ def generate_repair_table(md, all_repairs):
 
 
 def generate_detail_tables(md, team_stats):
-    """各班明细（只含小计行）"""
+    """各班明细（小计行显示正常班/检维修数）"""
     md.append("\n---\n\n## 📋 各班明细\n\n")
     for t in teams:
         if t not in team_stats:
             continue
         s = team_stats[t]
-        md.append(f"### {t}\n\n")
+        total = s['班数'] + s['检维修数']
+        md.append(f"### {t}（{total}）\n\n")
         md.append("| 日期 | 类型 | 蒸汽消耗 | 糖浆加量 | 水消耗 | 电消耗 | 水分 |\n")
         md.append("|:---:|:---:|:---:|:---:|:---:|:---:|:---:|\n")
         for d in s["明细"]:
             md.append(f"| {d['日期']} | {d['类型']} | {d['蒸汽']} | {d['糖浆']} | {d['水']} | {d['电']} | {d['水分']} |\n")
-        md.append(f"| **小计** | 正常班: {s['班数']} | {format_num(s['蒸汽'])} | {format_num(s['糖浆'])} | {format_num(s['水'])} | {format_num(s['电'])} | {s['扣分']} |\n")
+        md.append(f"| **小计** | 正常班: {s['班数']} | 检维修: {s['检维修数']} | {format_num(s['蒸汽'])} | {format_num(s['糖浆'])} | {format_num(s['水'])} | {format_num(s['电'])} | {s['扣分']} |\n")
         md.append("\n")
     return md
 
