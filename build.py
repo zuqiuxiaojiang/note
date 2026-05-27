@@ -293,7 +293,7 @@ def generate_repair_table(md, all_repairs):
 
 
 def generate_detail_tables(md, team_stats):
-    """各班明细（小计行显示正常班/检维修数）"""
+    """各班明细（小计行列对齐修复）"""
     md.append("\n---\n\n## 📋 各班明细\n\n")
     for t in teams:
         if t not in team_stats:
@@ -305,7 +305,8 @@ def generate_detail_tables(md, team_stats):
         md.append("|:---:|:---:|:---:|:---:|:---:|:---:|:---:|\n")
         for d in s["明细"]:
             md.append(f"| {d['日期']} | {d['类型']} | {d['蒸汽']} | {d['糖浆']} | {d['水']} | {d['电']} | {d['水分']} |\n")
-        md.append(f"| **小计** | 正常班: {s['班数']} | 检维修: {s['检维修数']} | {format_num(s['蒸汽'])} | {format_num(s['糖浆'])} | {format_num(s['水'])} | {format_num(s['电'])} | {s['扣分']} |\n")
+        # 修复：正常班和检维修数合并到"类型"列，保持7列对齐
+        md.append(f"| **小计** | 正常班: {s['班数']} \\| 检维修: {s['检维修数']} | {format_num(s['蒸汽'])} | {format_num(s['糖浆'])} | {format_num(s['水'])} | {format_num(s['电'])} | {s['扣分']} |\n")
         md.append("\n")
     return md
 
