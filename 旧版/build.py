@@ -4,24 +4,17 @@ import os
 import re
 
 # ═══════════════════════════════════════════════════════
-# 第一部分：配置区（按需修改）
+# 第一部分：配置区
 # ═══════════════════════════════════════════════════════
 
-# 报表网址
 report_url = "https://zuqiuxiaojiang.github.io/note/"
-
-# 班组列表
 teams = ["甲班", "乙班", "丙班", "丁班"]
-
-# 数据文件夹路径
 data_path = "生产数据/**/*.md"
-
-# 工艺分基数
 process_base_score = 40
 
 
 # ═══════════════════════════════════════════════════════
-# 第二部分：工具函数（共用）
+# 第二部分：工具函数
 # ═══════════════════════════════════════════════════════
 
 def clean_number(v):
@@ -43,28 +36,24 @@ def clean_number(v):
     return None
 
 
-def has_valid_data(p):
-    """判断是否为正常班（有有效蒸汽消耗数据）"""
-    return clean_number(p.get("蒸汽消耗")) is not None
-
-
 def safe_num(p, key):
     """安全读取数字，空值返回0"""
     v = clean_number(p.get(key))
     return v if v is not None else 0
 
 
+def has_any_data(p):
+    """判断该行是否有任意数据（蒸汽/糖浆/水/电任一即可）"""
+    keys = ["蒸汽消耗", "糖浆加量", "水消耗", "电消耗"]
+    return any(clean_number(p.get(k)) is not None for k in keys)
+
+
 # ═══════════════════════════════════════════════════════
-# 第三部分：水分处理（共用）
+# 第三部分：水分处理
 # ═══════════════════════════════════════════════════════
 
 def get_water_status(val):
-    """
-    水分状态与扣分自动判断（两套标准）
-    <=5 使用123标准：=2合格，<<2扣5分，>2扣10分
-    >5 使用考核标准：10.5~11.5合格，<<10.5扣5分，>11.5扣10分
-    返回: (emoji标记, 扣分)
-    """
+    """两套标准自动判断"""
     if val <= 5:
         if val == 2:
             return ("👌", 0)
@@ -82,7 +71,7 @@ def get_water_status(val):
 
 
 def format_water(m):
-    """只返回颜色emoji，不显示数字"""
+    """只返回颜色emoji"""
     val = clean_number(m)
     if val is None:
         return "-"
@@ -100,11 +89,11 @@ def calc_water_score(m):
 
 
 # ═══════════════════════════════════════════════════════
-# 第四部分：排名算法（共用）
+# 第四部分：排名算法
 # ═══════════════════════════════════════════════════════
 
 def rank(arr, key, asc=True):
-    """密集排名：并列同一名次"""
+    """密集排名"""
     s = sorted(arr, key=lambda x: x[1][key] if isinstance(x[1][key], (int, float)) else float('inf'))
     if not asc:
         s.reverse()
@@ -114,11 +103,11 @@ def rank(arr, key, asc=True):
 
 
 # ═══════════════════════════════════════════════════════
-# 第五部分：数据读取（共用）
+# 第五部分：数据读取
 # ═══════════════════════════════════════════════════════
 
 def load_pages():
-    """扫描所有笔记，读取frontmatter"""
+    """扫描所有笔记"""
     pages = []
     for path in glob.glob(data_path, recursive=True):
         try:
@@ -132,7 +121,7 @@ def load_pages():
 
 
 # ═══════════════════════════════════════════════════════
-# 第六部分：班组统计（共用核心逻辑）
+# 第六部分：班组统计（核心逻辑）
 # ═══════════════════════════════════════════════════════
 
 def calc_team_stats(pages):
@@ -151,8 +140,10 @@ def calc_team_stats(pages):
         明细 = []
         
         for p in rows:
-            has_data = has_valid_data(p)
+            is_repair = p.get("类型") == "检维修"
+            has_data = has_any_data(p) and not is_repair  # 检维修不计入正常班
             
+            # 正常班：有任意数据且不是检维修
             if has_data:
                 蒸汽合计 += safe_num(p, "蒸汽消耗")
                 糖浆合计 += safe_num(p, "糖浆加量")
@@ -160,6 +151,7 @@ def calc_team_stats(pages):
                 电合计   += safe_num(p, "电消耗")
                 正常班数 += 1
             
+            # 水分扣分（所有类型都计算）
             m = p.get("水分")
             本条扣分 = calc_water_score(m)
             水分扣分 += 本条扣分
@@ -169,21 +161,35 @@ def calc_team_stats(pages):
                 合格数 += 1
             
             # 收集检维修
-            if p.get("类型") == "检维修":
+            if is_repair:
                 all_repairs.append({
                     "班组": team,
                     "日期": p.get("日期", "-")
                 })
             
-            明细.append({
-                "日期": p.get("日期", "-"),
-                "类型": p.get("类型", "正常"),
-                "蒸汽": p.get("蒸汽消耗") if has_data else "-",
-                "糖浆": p.get("糖浆加量") if has_data else "-",
-                "水": p.get("水消耗") if has_data else "-",
-                "电": p.get("电消耗") if has_data else "-",
-                "水分": p.get("水分", "-")
-            })
+            # 明细行显示逻辑
+            if is_repair:
+                # 检维修：只显示水分，其他隐藏
+                明细.append({
+                    "日期": p.get("日期", "-"),
+                    "类型": "检维修",
+                    "蒸汽": "-",
+                    "糖浆": "-",
+                    "水": "-",
+                    "电": "-",
+                    "水分": format_water(p.get("水分"))
+                })
+            else:
+                # 正常班：有数据就显示，空值显示"-"
+                明细.append({
+                    "日期": p.get("日期", "-"),
+                    "类型": "正常",
+                    "蒸汽": safe_num(p, "蒸汽消耗") if clean_number(p.get("蒸汽消耗")) is not None else "-",
+                    "糖浆": safe_num(p, "糖浆加量") if clean_number(p.get("糖浆加量")) is not None else "-",
+                    "水": safe_num(p, "水消耗") if clean_number(p.get("水消耗")) is not None else "-",
+                    "电": safe_num(p, "电消耗") if clean_number(p.get("电消耗")) is not None else "-",
+                    "水分": format_water(p.get("水分"))
+                })
         
         蒸汽糖浆比 = round(蒸汽合计 / 糖浆合计, 4) if 糖浆合计 else "-"
         水平均 = round(水合计 / 正常班数, 2) if 正常班数 else "-"
@@ -228,7 +234,7 @@ def calc_rankings(team_stats):
 # ═══════════════════════════════════════════════════════
 
 def generate_summary_table(md, team_stats):
-    """生成汇总表"""
+    """汇总表"""
     md.append("## 📊 消耗统计汇总\n\n")
     md.append("| 班组 | 蒸汽用量 | 糖浆加量 | 水量 | 电量 | 水分扣分 |\n")
     md.append("|:---:|:---:|:---:|:---:|:---:|:---:|\n")
@@ -240,7 +246,7 @@ def generate_summary_table(md, team_stats):
 
 
 def generate_average_table(md, team_stats):
-    """生成平均分表（含工艺分）"""
+    """平均表（含工艺分）"""
     md.append("\n## 📈 平均分\n\n")
     md.append("| 班组 | 蒸汽÷糖浆 | 水量÷正常班 | 电量÷正常班 | 工艺分 |\n")
     md.append("|:---:|:---:|:---:|:---:|:---:|\n")
@@ -252,7 +258,7 @@ def generate_average_table(md, team_stats):
 
 
 def generate_ranking_table(md, team_stats):
-    """生成积分排名表"""
+    """排名表"""
     stats_list = calc_rankings(team_stats)
     md.append("\n## 🏆 积分排名\n\n")
     md.append("| 班组 | 蒸汽÷糖浆排名 | 水消耗排名 | 电消耗排名 | 各班积分 | 最低消耗排名 |\n")
@@ -263,7 +269,7 @@ def generate_ranking_table(md, team_stats):
 
 
 def generate_repair_table(md, all_repairs):
-    """生成检维修记录表（无记录时跳过）"""
+    """检维修记录（无记录时跳过）"""
     if not all_repairs:
         return md
     md.append("\n## 🔧 检维修记录\n\n")
@@ -275,7 +281,7 @@ def generate_repair_table(md, all_repairs):
 
 
 def generate_detail_tables(md, team_stats):
-    """生成各班明细表（只含小计行）"""
+    """各班明细（只含小计行）"""
     md.append("\n---\n\n## 📋 各班明细\n\n")
     for t in teams:
         if t not in team_stats: continue
@@ -284,36 +290,31 @@ def generate_detail_tables(md, team_stats):
         md.append("| 日期 | 类型 | 蒸汽消耗 | 糖浆加量 | 水消耗 | 电消耗 | 水分 |\n")
         md.append("|:---:|:---:|:---:|:---:|:---:|:---:|:---:|\n")
         for d in s["明细"]:
-            md.append(f"| {d['日期']} | {d['类型']} | {d['蒸汽']} | {d['糖浆']} | {d['水']} | {d['电']} | {format_water(d['水分'])} |\n")
+            md.append(f"| {d['日期']} | {d['类型']} | {d['蒸汽']} | {d['糖浆']} | {d['水']} | {d['电']} | {d['水分']} |\n")
         md.append(f"| **小计** | 正常班: {s['班数']} | {s['蒸汽']} | {s['糖浆']} | {s['水']} | {s['电']} | {s['扣分']} |\n")
         md.append("\n")
     return md
 
 
 # ═══════════════════════════════════════════════════════
-# 第八部分：主程序（按需组装）
+# 第八部分：主程序
 # ═══════════════════════════════════════════════════════
 
 def main():
-    # 1. 读取数据
     pages = load_pages()
-    
-    # 2. 计算统计
     team_stats, all_repairs = calc_team_stats(pages)
     
-    # 3. 组装报表（按需选用生成函数）
     md = [
         "# 生产数据报表\n\n",
         f"🌐 [在线报表]({report_url})\n\n"
     ]
     
-    md = generate_summary_table(md, team_stats)      # 汇总表
-    md = generate_average_table(md, team_stats)      # 平均表（含工艺分）
-    md = generate_ranking_table(md, team_stats)      # 排名表
-    md = generate_repair_table(md, all_repairs)      # 检维修（可选）
-    md = generate_detail_tables(md, team_stats)      # 明细表
+    md = generate_summary_table(md, team_stats)
+    md = generate_average_table(md, team_stats)
+    md = generate_ranking_table(md, team_stats)
+    md = generate_repair_table(md, all_repairs)
+    md = generate_detail_tables(md, team_stats)
     
-    # 4. 输出
     with open("README.md", "w", encoding="utf-8") as f:
         f.writelines(md)
 
