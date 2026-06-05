@@ -17,6 +17,7 @@ nav_links = [
     {"text": "首页", "url": "https://zuqiuxiaojiang.github.io"},
     {"text": "…我…", "url": "https://zuqiuxiaojiang.github.io/-"},
     {"text": "工作", "url": "https://zuqiuxiaojiang.github.io/_"},
+    {"text": "NOTE", "url": "https://zuqiuxiaojiang.github.io/note"},
     # 在这里添加更多链接
     # {"text": "新链接", "url": "https://example.com"},
 ]
@@ -251,7 +252,7 @@ def generate_header(md):
 <span class="inline-title">{header_title}</span>
 </h1>
 
-## 首页：
+## NOTE：
 
 <h3>
 <p>
