@@ -15,7 +15,7 @@ process_base_score = 40
 # 自定义导航链接（按需添加）
 nav_links = [
     {"text": "首页", "url": "https://zuqiuxiaojiang.github.io"},
-    {"text": "…我…", "url": "https://zuqiuxiaojiang.github.io/-"},
+    {"text": "个人", "url": "https://zuqiuxiaojiang.github.io/-"},
     {"text": "工作", "url": "https://zuqiuxiaojiang.github.io/_"},
     {"text": "NOTE", "url": "https://zuqiuxiaojiang.github.io/note"},
     # 在这里添加更多链接
