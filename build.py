@@ -23,8 +23,8 @@ nav_links = [
 ]
 
 # 页头图片路径（相对于仓库根目录或绝对URL）
-header_image = "./国旗-球形.png"  # 或 "https://你的图床地址/图片.png"
-header_title = "勝利的凱歌"
+header_image = "./翼.png"  # 或 "https://你的图床地址/图片.png"
+header_title = "天使之翼"
 
 
 # ═══════════════════════════════════════════════════════
@@ -345,7 +345,8 @@ def main():
     md = generate_header(md)
     
     # 再生成报表内容
-    md.append(f"🌐 [在线报表]({report_url})\n\n")
+    # 在这里的链接[在线报表]可以注释掉
+#    md.append(f"🌐 [在线报表]({report_url})\n\n")
     md = generate_summary_table(md, team_stats)
     md = generate_average_table(md, team_stats)
     md = generate_ranking_table(md, team_stats)
