@@ -72,7 +72,7 @@ def format_num(v):
 
 
 # ═══════════════════════════════════════════════════════
-# 新增：智能除法函数（循环小数检测）
+# 新增：智能除法函数
 # ═══════════════════════════════════════════════════════
 
 def find_repeating_decimal(numerator, denominator, max_digits=30):
@@ -124,9 +124,9 @@ def find_repeating_decimal(numerator, denominator, max_digits=30):
 def smart_divide(numerator, denominator, max_digits=4):
     """
     智能除法：
-    - 能除尽：保留完整小数，去掉末尾0（如 5.0 -> 5, 0.50 -> 0.5）
-    - 循环小数：标记循环节，如 0.(3♻️), 0.1(6♻️), 3.(142857♻️)
-    - 除不尽不循环：保留 max_digits+2 位
+    - 能除尽：去掉末尾0（如 5.0 -> 5, 0.50 -> 0.5）
+    - 除不尽不循环：保留4位小数
+    - 循环小数：循环节重复显示，保证位数 > 5位
     """
     if denominator == 0 or denominator is None:
         return "-"
@@ -137,10 +137,16 @@ def smart_divide(numerator, denominator, max_digits=4):
         return "-"
 
     if is_rep:
+        # 循环小数：循环节重复，保证总位数 > max_digits + 1
+        min_total = max_digits + 2  # 至少6位
+        repeat_count = max(2, (min_total - len(non_rep) + len(rep) - 1) // len(rep))
+
         if non_rep:
-            return f"{int_part}.{non_rep}({rep}\u267B\uFE0F)"
+            decimal_part = non_rep + rep * repeat_count
+            return f"{int_part}.{decimal_part}"
         else:
-            return f"{int_part}.({rep}\u267B\uFE0F)"
+            decimal_part = rep * repeat_count
+            return f"{int_part}.{decimal_part}"
 
     # 能除尽（有限小数）
     if non_rep == "":
@@ -283,13 +289,13 @@ def calc_team_stats(pages):
 
             if is_repair:
                 明细.append({
-                    "日期": p.get("日期", "-"), "类型": "🔧",
+                    "日期": p.get("日期", "-"), "类型": "🛠",
                     "蒸汽": "-", "糖浆": "-", "水": "-", "电": "-",
                     "水分": format_water(p.get("水分"))
                 })
             else:
                 明细.append({
-                    "日期": p.get("日期", "-"), "类型": "⚙️",
+                    "日期": p.get("日期", "-"), "类型": "✅",
                     "蒸汽": format_num(p.get("蒸汽消耗")),
                     "糖浆": format_num(p.get("糖浆加量")),
                     "水": format_num(p.get("水消耗")),
@@ -370,15 +376,11 @@ def generate_legend_table(md):
     md.append("## 📖 图例说明\\n\\n")
     md.append("| 符号 | 含义 | 说明 |\\n")
     md.append("|:---:|:---|:---|\\n")
-    md.append("| ⚙️ | 正常生产 | 正常班次记录 |\\n")
-    md.append("| 🔧 | 检维修 | 设备检修/维护班次 |\\n")
+    md.append("| ✅ | 正常生产 | 正常班次记录 |\\n")
+    md.append("| 🛠 | 检维修 | 设备检修/维护班次 |\\n")
     md.append("| 👌 | 水分达标 | 水分值在合格范围内 |\\n")
     md.append("| 🍂 | 水分偏低 | 水分低于下限，扣5分 |\\n")
     md.append("| 💦 | 水分偏高 | 水分高于上限，扣10分 |\\n")
-    md.append("| `0.(3♻️)` | 循环小数 | 括号内数字循环，如 1/3 = 0.333… |\\n")
-    md.append("| `0.1(6♻️)` | 混循环小数 | 非循环部分 + 循环部分，如 1/6 = 0.1666… |\\n")
-    md.append("| `0.5` | 有限小数 | 能除尽，保留完整小数位 |\\n")
-    md.append("| `5` | 整数 | 能除尽且无余数 |\\n")
     md.append("\\n")
     return md
 
@@ -444,7 +446,7 @@ def generate_detail_tables(md, team_stats):
         md.append("|:---:|:---:|:---:|:---:|:---:|:---:|:|:|\\n")
         for d in s["明细"]:
             md.append(f"| {d['日期']} | {d['类型']} | {d['蒸汽']} | {d['糖浆']} | {d['水']} | {d['电']} | {d['水分']} |\\n")
-        md.append(f"| **小计** | ⚙️: {s['班数']} \\| 🔧: {s['检维修数']} | {format_num(s['蒸汽'])} | {format_num(s['糖浆'])} | {format_num(s['水'])} | {format_num(s['电'])} | {s['扣分']} |\\n")
+        md.append(f"| **小计** | ✅: {s['班数']} \\| 🛠: {s['检维修数']} | {format_num(s['蒸汽'])} | {format_num(s['糖浆'])} | {format_num(s['水'])} | {format_num(s['电'])} | {s['扣分']} |\\n")
         md.append("\\n")
     return md
 
