@@ -7,10 +7,24 @@ import re
 # 第一部分：配置区
 # ═══════════════════════════════════════════════════════
 
-report_url = "https://你的用户名.github.io/你的仓库名/"
+report_url = "https://zuqiuxiaojiang.github.io/note/"
 teams = ["甲班", "乙班", "丙班", "丁班"]
 data_path = "生产数据/**/*.md"
 process_base_score = 40
+
+# 自定义导航链接（按需添加）
+nav_links = [
+    {"text": "首页", "url": "https://zuqiuxiaojiang.github.io"},
+    {"text": "个人", "url": "https://zuqiuxiaojiang.github.io/-"},
+    {"text": "工作", "url": "https://zuqiuxiaojiang.github.io/_"},
+    {"text": "NOTE", "url": "https://zuqiuxiaojiang.github.io/note"},
+    # 在这里添加更多链接
+    # {"text": "新链接", "url": "https://example.com"},
+]
+
+# 页头图片路径（相对于仓库根目录或绝对URL）
+header_image = "./翼.png"  # 或 "https://你的图床地址/图片.png"
+header_title = "天使之翼"
 
 
 # ═══════════════════════════════════════════════════════
@@ -18,7 +32,6 @@ process_base_score = 40
 # ═══════════════════════════════════════════════════════
 
 def clean_number(v):
-    """清洗数字：兼容引号、空格、单位、中文符号"""
     if v is None:
         return None
     if isinstance(v, (int, float)):
@@ -37,19 +50,16 @@ def clean_number(v):
 
 
 def safe_num(p, key):
-    """安全读取数字，空值返回0"""
     v = clean_number(p.get(key))
     return v if v is not None else 0
 
 
 def has_any_data(p):
-    """判断该行是否有任意数据（蒸汽/糖浆/水/电任一即可）"""
     keys = ["蒸汽消耗", "糖浆加量", "水消耗", "电消耗"]
     return any(clean_number(p.get(k)) is not None for k in keys)
 
 
 def format_num(v):
-    """格式化数字：整数显示整数，小数保留原样"""
     if v is None or v == "" or v == "-":
         return "-"
     try:
@@ -62,11 +72,10 @@ def format_num(v):
 
 
 # ═══════════════════════════════════════════════════════
-# 第三部分：水分处理（emoji已改）
+# 第三部分：水分处理
 # ═══════════════════════════════════════════════════════
 
 def get_water_status(val):
-    """两套标准自动判断"""
     if val <= 5:
         if val == 2:
             return ("👌", 0)
@@ -84,7 +93,6 @@ def get_water_status(val):
 
 
 def format_water(m):
-    """只返回颜色emoji"""
     val = clean_number(m)
     if val is None:
         return "-"
@@ -93,7 +101,6 @@ def format_water(m):
 
 
 def calc_water_score(m):
-    """计算水分扣分"""
     val = clean_number(m)
     if val is None:
         return 0
@@ -106,7 +113,6 @@ def calc_water_score(m):
 # ═══════════════════════════════════════════════════════
 
 def rank(arr, key, asc=True):
-    """密集排名"""
     s = sorted(arr, key=lambda x: x[1][key] if isinstance(x[1][key], (int, float)) else float('inf'))
     if not asc:
         s.reverse()
@@ -120,7 +126,6 @@ def rank(arr, key, asc=True):
 # ═══════════════════════════════════════════════════════
 
 def load_pages():
-    """扫描所有笔记"""
     pages = []
     for path in glob.glob(data_path, recursive=True):
         try:
@@ -134,11 +139,10 @@ def load_pages():
 
 
 # ═══════════════════════════════════════════════════════
-# 第六部分：班组统计（核心逻辑）
+# 第六部分：班组统计
 # ═══════════════════════════════════════════════════════
 
 def calc_team_stats(pages):
-    """按班组计算所有统计数据"""
     team_stats = {}
     all_repairs = []
     
@@ -175,25 +179,17 @@ def calc_team_stats(pages):
                 合格数 += 1
             
             if is_repair:
-                all_repairs.append({
-                    "班组": team,
-                    "日期": p.get("日期", "-")
-                })
+                all_repairs.append({"班组": team, "日期": p.get("日期", "-")})
             
             if is_repair:
                 明细.append({
-                    "日期": p.get("日期", "-"),
-                    "类型": "检维修",
-                    "蒸汽": "-",
-                    "糖浆": "-",
-                    "水": "-",
-                    "电": "-",
+                    "日期": p.get("日期", "-"), "类型": "检维修",
+                    "蒸汽": "-", "糖浆": "-", "水": "-", "电": "-",
                     "水分": format_water(p.get("水分"))
                 })
             else:
                 明细.append({
-                    "日期": p.get("日期", "-"),
-                    "类型": "正常",
+                    "日期": p.get("日期", "-"), "类型": "正常",
                     "蒸汽": format_num(p.get("蒸汽消耗")),
                     "糖浆": format_num(p.get("糖浆加量")),
                     "水": format_num(p.get("水消耗")),
@@ -208,7 +204,8 @@ def calc_team_stats(pages):
         
         team_stats[team] = {
             "蒸汽": 蒸汽合计, "糖浆": 糖浆合计, "水": 水合计, "电": 电合计,
-            "扣分": 水分扣分, "班数": 正常班数, "检维修数": 检维修数, "合格数": 合格数, "工艺分": 工艺分,
+            "扣分": 水分扣分, "班数": 正常班数, "检维修数": 检维修数,
+            "合格数": 合格数, "工艺分": 工艺分,
             "比": 蒸汽糖浆比, "水均": 水平均, "电均": 电平均,
             "明细": 明细
         }
@@ -217,7 +214,6 @@ def calc_team_stats(pages):
 
 
 def calc_rankings(team_stats):
-    """计算各项排名"""
     stats_list = [(t, team_stats[t]) for t in teams if t in team_stats]
     
     r_ratio = rank(stats_list, "比", True)
@@ -240,11 +236,40 @@ def calc_rankings(team_stats):
 
 
 # ═══════════════════════════════════════════════════════
-# 第七部分：报表生成
+# 第七部分：页头生成（新增）
+# ═══════════════════════════════════════════════════════
+
+def generate_header(md):
+    """生成自定义 HTML 页头"""
+    # 导航链接拼接
+    nav_items = " | ".join([f'<a href="{link["url"]}">{link["text"]}</a>' for link in nav_links])
+    
+    header = f'''<!-- 引入外部CSS文件 -->
+<link rel="stylesheet" href="styles.css">
+
+<h1>
+<img src="{header_image}" alt="图片" class="inline-image" />
+<span class="inline-title">{header_title}</span>
+</h1>
+
+## NOTE：
+
+<h3>
+<p>
+	{nav_items}
+</p>
+</h3>
+
+'''
+    md.append(header)
+    return md
+
+
+# ═══════════════════════════════════════════════════════
+# 第八部分：报表生成
 # ═══════════════════════════════════════════════════════
 
 def generate_summary_table(md, team_stats):
-    """汇总表"""
     md.append("## 📊 消耗统计汇总\n\n")
     md.append("| 班组 | 蒸汽用量 | 糖浆加量 | 水量 | 电量 | 水分扣分 |\n")
     md.append("|:---:|:---:|:---:|:---:|:---:|:---:|\n")
@@ -257,7 +282,6 @@ def generate_summary_table(md, team_stats):
 
 
 def generate_average_table(md, team_stats):
-    """平均表（含工艺分）"""
     md.append("\n## 📈 平均分\n\n")
     md.append("| 班组 | 蒸汽÷糖浆 | 水量÷正常班 | 电量÷正常班 | 工艺分 |\n")
     md.append("|:---:|:---:|:---:|:---:|:---:|\n")
@@ -270,7 +294,6 @@ def generate_average_table(md, team_stats):
 
 
 def generate_ranking_table(md, team_stats):
-    """排名表"""
     stats_list = calc_rankings(team_stats)
     md.append("\n## 🏆 积分排名\n\n")
     md.append("| 班组 | 蒸汽÷糖浆排名 | 水消耗排名 | 电消耗排名 | 各班积分 | 最低消耗排名 |\n")
@@ -281,7 +304,6 @@ def generate_ranking_table(md, team_stats):
 
 
 def generate_repair_table(md, all_repairs):
-    """检维修记录（无记录时跳过）"""
     if not all_repairs:
         return md
     md.append("\n## 🔧 检维修记录\n\n")
@@ -293,7 +315,6 @@ def generate_repair_table(md, all_repairs):
 
 
 def generate_detail_tables(md, team_stats):
-    """各班明细（小计行列对齐修复）"""
     md.append("\n---\n\n## 📋 各班明细\n\n")
     for t in teams:
         if t not in team_stats:
@@ -305,25 +326,27 @@ def generate_detail_tables(md, team_stats):
         md.append("|:---:|:---:|:---:|:---:|:---:|:---:|:---:|\n")
         for d in s["明细"]:
             md.append(f"| {d['日期']} | {d['类型']} | {d['蒸汽']} | {d['糖浆']} | {d['水']} | {d['电']} | {d['水分']} |\n")
-        # 修复：正常班和检维修数合并到"类型"列，保持7列对齐
         md.append(f"| **小计** | 正常班: {s['班数']} \\| 检维修: {s['检维修数']} | {format_num(s['蒸汽'])} | {format_num(s['糖浆'])} | {format_num(s['水'])} | {format_num(s['电'])} | {s['扣分']} |\n")
         md.append("\n")
     return md
 
 
 # ═══════════════════════════════════════════════════════
-# 第八部分：主程序
+# 第九部分：主程序
 # ═══════════════════════════════════════════════════════
 
 def main():
     pages = load_pages()
     team_stats, all_repairs = calc_team_stats(pages)
     
-    md = [
-        "# 生产数据报表\n\n",
-        f"🌐 [在线报表]({report_url})\n\n"
-    ]
+    md = []
     
+    # 先生成自定义页头
+    md = generate_header(md)
+    
+    # 再生成报表内容
+    # 在这里的链接[在线报表]可以注释掉
+#    md.append(f"🌐 [在线报表]({report_url})\n\n")
     md = generate_summary_table(md, team_stats)
     md = generate_average_table(md, team_stats)
     md = generate_ranking_table(md, team_stats)
