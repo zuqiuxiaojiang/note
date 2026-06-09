@@ -183,13 +183,13 @@ def calc_team_stats(pages):
             
             if is_repair:
                 明细.append({
-                    "日期": p.get("日期", "-"), "类型": "检维修",
+                    "日期": p.get("日期", "-"), "类型": "🛠",
                     "蒸汽": "-", "糖浆": "-", "水": "-", "电": "-",
                     "水分": format_water(p.get("水分"))
                 })
             else:
                 明细.append({
-                    "日期": p.get("日期", "-"), "类型": "正常",
+                    "日期": p.get("日期", "-"), "类型": "✅",
                     "蒸汽": format_num(p.get("蒸汽消耗")),
                     "糖浆": format_num(p.get("糖浆加量")),
                     "水": format_num(p.get("水消耗")),
@@ -345,7 +345,7 @@ def generate_detail_tables(md, team_stats):
         md.append("|:---:|:---:|:---:|:---:|:---:|:---:|:---:|\n")
         for d in s["明细"]:
             md.append(f"| {d['日期']} | {d['类型']} | {d['蒸汽']} | {d['糖浆']} | {d['水']} | {d['电']} | {d['水分']} |\n")
-        md.append(f"| **小计** | 正常班: {s['班数']} \\| 检维修: {s['检维修数']} | {format_num(s['蒸汽'])} | {format_num(s['糖浆'])} | {format_num(s['水'])} | {format_num(s['电'])} | {s['扣分']} |\n")
+        md.append(f"| **小计** | ✅: {s['班数']} \\| 🛠: {s['检维修数']} | {format_num(s['蒸汽'])} | {format_num(s['糖浆'])} | {format_num(s['水'])} | {format_num(s['电'])} | {s['扣分']} |\n")
         md.append("\n")
     return md
 
