@@ -12,8 +12,8 @@ teams = ["甲班", "乙班", "丙班", "丁班"]
 data_path = "生产数据/**/*.md"
 process_base_score = 40
 
-# 水分标准选择：0=自动判断，1=123标准(=2合格)，2=考核标准(10.5~11.5合格)
-water_standard = 0  # ← 这里改：0自动，1用2的标准，2用10.5的标准
+# 水分标准选择：0=自动判断，1=123标准(=2合格)，2=考核标准(11~12合格)
+water_standard = 0  # ← 这里改：0自动，1用2的标准，2用11的标准
 
 # 自定义导航链接
 nav_links = [
@@ -98,7 +98,7 @@ def get_water_status(val):
     根据 water_standard 配置选择标准：
     - 0: 自动判断（val<=5用123标准，val>5用考核标准）
     - 1: 强制123标准（=2合格，<<2扣5分，>2扣10分）
-    - 2: 强制考核标准（10.5~11.5合格，<<10.5扣5分，>11.5扣10分）
+    - 2: 强制考核标准（11~12合格，<<11扣5分，>12扣10分）
     """
     # 判断使用哪套标准
     if water_standard == 1:
@@ -117,10 +117,10 @@ def get_water_status(val):
         else:
             return (ICON_WATER_HIGH, -10)
     else:
-        # 考核标准：10.5~11.5合格，<<10.5扣5分，>11.5扣10分
-        if 10.5 <= val <= 11.5:
+        # 考核标准：11~12合格，<<11扣5分，>12扣10分
+        if 11 <= val <= 12:
             return (ICON_WATER_OK, 0)
-        elif val < 10.5:
+        elif val < 11:
             return (ICON_WATER_LOW, -5)
         else:
             return (ICON_WATER_HIGH, -10)
