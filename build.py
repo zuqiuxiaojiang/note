@@ -314,7 +314,7 @@ def generate_header(md):
 <span class="inline-title">{header_title}</span>
 </h1>
 
-## 首页：
+## NOTE：
 
 <h3>
 <p>
