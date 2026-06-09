@@ -23,8 +23,8 @@ nav_links = [
 ]
 
 # 页头图片和标题
-header_image = "./国旗-球形.png"
-header_title = "勝利的凱歌"
+header_image = "./翼.png"
+header_title = "天使之翼"
 
 # 图例emoji配置（日后修改这里即可）
 ICON_NORMAL = "✅"      # 正常班标记
@@ -300,8 +300,8 @@ def generate_header(md):
 | {ICON_NORMAL} | 正常班 |
 | {ICON_REPAIR} | 检维修 |
 | {ICON_WATER_OK} | 水分合格 |
-| {ICON_WATER_LOW} | 水分偏低（扣分） |
-| {ICON_WATER_HIGH} | 水分偏高（扣分） |
+| {ICON_WATER_LOW} | 水分偏低（扣5分） |
+| {ICON_WATER_HIGH} | 水分偏高（扣10分） |
 
 '''
     
@@ -413,7 +413,7 @@ def main():
     md = generate_header(md)
     
     # 再生成报表内容
-    md.append(f"🌐 [在线报表]({report_url})\n\n")
+#    md.append(f"🌐 [在线报表]({report_url})\n\n")
     md = generate_summary_table(md, team_stats)
     md = generate_average_table(md, team_stats)
     md = generate_ranking_table(md, team_stats)
