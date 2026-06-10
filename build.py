@@ -107,7 +107,7 @@ def get_water_status(val):
         use_123 = False
     else:  # water_standard == 0，自动判断
         use_123 = (val <= 5)
-
+    
     if use_123:
         # 123标准：=2合格，<<2扣5分，>2扣10分
         if val == 2:
@@ -184,11 +184,11 @@ def calc_team_stats(pages):
     """按班组计算所有统计数据"""
     team_stats = {}
     all_repairs = []
-
+    
     for team in teams:
         rows = [p for p in pages if p.get("班组") == team]
         rows.sort(key=lambda x: str(x.get("日期", "")))
-
+        
         蒸汽合计 = 0.0  # 用浮点数避免整数精度问题
         糖浆合计 = 0.0
         水合计 = 0.0    # 水消耗用浮点数累加，避免小数精度丢失
@@ -198,31 +198,31 @@ def calc_team_stats(pages):
         水分扣分 = 0
         合格数 = 0
         明细 = []
-
+        
         for p in rows:
             is_repair = p.get("类型") == "检维修"
             has_data = has_any_data(p) and not is_repair
-
+            
             if has_data:
                 蒸汽合计 += safe_num(p, "蒸汽消耗")
                 糖浆合计 += safe_num(p, "糖浆加量")
                 水合计   += safe_num(p, "水消耗")   # 浮点数累加
                 电合计   += safe_num(p, "电消耗")
                 正常班数 += 1
-
+            
             if is_repair:
                 检维修数 += 1
-
+            
             m = p.get("水分")
             本条扣分 = calc_water_score(m)
             水分扣分 += 本条扣分
-
+            
             if has_data and 本条扣分 == 0:
                 合格数 += 1
-
+            
             if is_repair:
                 all_repairs.append({"班组": team, "日期": p.get("日期", "-")})
-
+            
             # 明细行：正常班用✅，检维修用🛠
             if is_repair:
                 明细.append({
@@ -244,13 +244,13 @@ def calc_team_stats(pages):
                     "电": format_num(p.get("电消耗")),
                     "水分": format_water(p.get("水分"))
                 })
-
+        
         # 平均值计算：用浮点数除法，保留精度
         蒸汽糖浆比 = round(蒸汽合计 / 糖浆合计, 4) if 糖浆合计 else "-"
         水平均 = round(水合计 / 正常班数, 4) if 正常班数 else "-"  # 保留4位再格式化
         电平均 = round(电合计 / 正常班数, 4) if 正常班数 else "-"
         工艺分 = round(process_base_score / 正常班数 * 合格数, 4) if 正常班数 > 0 else 0
-
+        
         team_stats[team] = {
             "蒸汽": 蒸汽合计, "糖浆": 糖浆合计, "水": 水合计, "电": 电合计,
             "扣分": 水分扣分, "班数": 正常班数, "检维修数": 检维修数,
@@ -258,18 +258,18 @@ def calc_team_stats(pages):
             "比": 蒸汽糖浆比, "水均": 水平均, "电均": 电平均,
             "明细": 明细
         }
-
+    
     return team_stats, all_repairs
 
 
 def calc_rankings(team_stats):
     """计算各项排名"""
     stats_list = [(t, team_stats[t]) for t in teams if t in team_stats]
-
+    
     r_ratio = rank(stats_list, "比", True)
     r_water = rank(stats_list, "水均", True)
     r_elec  = rank(stats_list, "电均", True)
-
+    
     for t, s in stats_list:
         s["排名比"] = r_ratio.get(s["比"], "-")
         s["排名水"] = r_water.get(s["水均"], "-")
@@ -277,11 +277,11 @@ def calc_rankings(team_stats):
         s["积分"] = (s["排名比"] if isinstance(s["排名比"], int) else 0) + \
                     (s["排名水"] if isinstance(s["排名水"], int) else 0) + \
                     (s["排名电"] if isinstance(s["排名电"], int) else 0)
-
+    
     r_score = rank([(t, s) for t, s in stats_list], "积分", True)
     for t, s in stats_list:
         s["总排名"] = r_score.get(s["积分"], "-")
-
+    
     return stats_list
 
 
@@ -376,12 +376,12 @@ def generate_summary_table(md, team_stats):
     """汇总表"""
     md.append("## 📊 消耗统计汇总\n\n")
     md.append("| 班组 | 蒸汽用量 | 糖浆加量 | 水量 | 电量 | 水分扣分 |\n")
-    md.append("|:---:|:---:|:---:|:---:|:---:|:---:|")
+    md.append("|:---:|:---:|:---:|:---:|:---:|:---:|\n")
     for t in teams:
         if t not in team_stats:
             continue
         s = team_stats[t]
-        md.append(f"| {t} | {format_num(s['蒸汽'])} | {format_num(s['糖浆'])} | {format_num(s['水'])} | {format_num(s['电'])} | {s['扣分']} |")
+        md.append(f"| {t} | {format_num(s['蒸汽'])} | {format_num(s['糖浆'])} | {format_num(s['水'])} | {format_num(s['电'])} | {s['扣分']} |\n")
     return md
 
 
@@ -389,12 +389,12 @@ def generate_average_table(md, team_stats):
     """平均表（含工艺分）"""
     md.append("\n## 📈 平均分\n\n")
     md.append("| 班组 | 蒸汽÷糖浆 | 水量÷正常班 | 电量÷正常班 | 工艺分 |\n")
-    md.append("|:---:|:---:|:---:|:---:|:---:|")
+    md.append("|:---:|:---:|:---:|:---:|:---:|\n")
     for t in teams:
         if t not in team_stats:
             continue
         s = team_stats[t]
-        md.append(f"| {t} | {format_num(s['比'])} | {format_num(s['水均'])} | {format_num(s['电均'])} | {format_num(s['工艺分'])} |")
+        md.append(f"| {t} | {format_num(s['比'])} | {format_num(s['水均'])} | {format_num(s['电均'])} | {format_num(s['工艺分'])} |\n")
     return md
 
 
@@ -403,9 +403,9 @@ def generate_ranking_table(md, team_stats):
     stats_list = calc_rankings(team_stats)
     md.append("\n## 🏆 积分排名\n\n")
     md.append("| 班组 | 蒸汽÷糖浆排名 | 水消耗排名 | 电消耗排名 | 各班积分 | 最低消耗排名 |\n")
-    md.append("|:---:|:---:|:---:|:---:|:---:|:---:|")
+    md.append("|:---:|:---:|:---:|:---:|:---:|:---:|\n")
     for t, s in stats_list:
-        md.append(f"| {t} | {s['排名比']} | {s['排名水']} | {s['排名电']} | {s['积分']} | {s['总排名']} |")
+        md.append(f"| {t} | {s['排名比']} | {s['排名水']} | {s['排名电']} | {s['积分']} | {s['总排名']} |\n")
     return md
 
 
@@ -415,9 +415,9 @@ def generate_repair_table(md, all_repairs):
         return md
     md.append("\n## 🔧 检维修记录\n\n")
     md.append("| 班组 | 日期 |\n")
-    md.append("|:---:|:---:|")
+    md.append("|:---:|:---:|\n")
     for r in all_repairs:
-        md.append(f"| {r['班组']} | {r['日期']} |")
+        md.append(f"| {r['班组']} | {r['日期']} |\n")
     return md
 
 
@@ -431,12 +431,12 @@ def generate_detail_tables(md, team_stats):
         total = s['班数'] + s['检维修数']
         md.append(f"### {t}（{total}）\n\n")
         md.append("| 日期 | 类型 | 蒸汽消耗 | 糖浆加量 | 水消耗 | 电消耗 | 水分 |\n")
-        md.append("|:---:|:---:|:---:|:---:|:---:|:---:|:---:|")
+        md.append("|:---:|:---:|:---:|:---:|:---:|:---:|:---:|\n")
         for d in s["明细"]:
-            md.append(f"| {d['日期']} | {d['类型']} | {d['蒸汽']} | {d['糖浆']} | {d['水']} | {d['电']} | {d['水分']} |")
+            md.append(f"| {d['日期']} | {d['类型']} | {d['蒸汽']} | {d['糖浆']} | {d['水']} | {d['电']} | {d['水分']} |\n")
         # 小计行：类型列显示正常班和检维修数量，保持7列对齐
-        md.append(f"| **小计** | {ICON_NORMAL}:{s['班数']} \\| {ICON_REPAIR}:{s['检维修数']} | {format_num(s['蒸汽'])} | {format_num(s['糖浆'])} | {format_num(s['水'])} | {format_num(s['电'])} | {s['扣分']} |")
-        md.append("")
+        md.append(f"| **小计** | {ICON_NORMAL}:{s['班数']} \\| {ICON_REPAIR}:{s['检维修数']} | {format_num(s['蒸汽'])} | {format_num(s['糖浆'])} | {format_num(s['水'])} | {format_num(s['电'])} | {s['扣分']} |\n")
+        md.append("\n")
     return md
 
 
@@ -447,12 +447,12 @@ def generate_detail_tables(md, team_stats):
 def main():
     pages = load_pages()
     team_stats, all_repairs = calc_team_stats(pages)
-
+    
     md = []
-
-    # 先生成自定义页头（含密码验证 + 图例）
+    
+    # 先生成自定义页头（含图例）
     md = generate_header(md)
-
+    
     # 再生成报表内容
 #    md.append(f"🌐 [在线报表]({report_url})\n\n")
     md = generate_summary_table(md, team_stats)
@@ -460,9 +460,9 @@ def main():
     md = generate_ranking_table(md, team_stats)
     md = generate_repair_table(md, all_repairs)
     md = generate_detail_tables(md, team_stats)
-
+    
     with open("README.md", "w", encoding="utf-8") as f:
-        f.write("\n".join(md) + "\n")
+        f.writelines(md)
 
 
 if __name__ == "__main__":
