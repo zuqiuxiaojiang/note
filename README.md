@@ -1,3 +1,4 @@
+
 <!-- 引入外部CSS文件 -->
 <link rel="stylesheet" href="styles.css">
 
@@ -30,7 +31,7 @@ function password() {
         }
     }
     alert('您已用完所有尝试机会，页面将返回上一页');
-    window.location.replace("https://zuqiuxiaojiang.github.ionote"); // 替换为上一页的地址
+    window.location.replace("https://zuqiuxiaojiang.github.io/note"); // 替换为上一页的地址
     return "密码验证失败"; // 返回一个明确的值
 }
 

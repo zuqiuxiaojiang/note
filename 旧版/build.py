@@ -31,8 +31,8 @@ header_title = "天使之翼"
 ICON_NORMAL = "✅"      # 正常班标记
 ICON_REPAIR = "🛠"       # 检维修标记
 ICON_WATER_OK = "👌"     # 水分合格
-ICON_WATER_LOW = "🍂"    # 水分偏低
-ICON_WATER_HIGH = "💦"   # 水分偏高
+ICON_WATER_LOW = "🍂"    # 水分偏干
+ICON_WATER_HIGH = "💦"   # 水分偏潮
 
 
 # ═══════════════════════════════════════════════════════
@@ -301,8 +301,8 @@ def generate_header(md):
 | {ICON_NORMAL} | 正常班 |
 | {ICON_REPAIR} | 检维修 |
 | {ICON_WATER_OK} | 水分合格 |
-| {ICON_WATER_LOW} | 水分偏低（扣5分） |
-| {ICON_WATER_HIGH} | 水分偏高（扣10分） |
+| {ICON_WATER_LOW} | 水分偏干（扣5分） |
+| {ICON_WATER_HIGH} | 水分偏潮（扣10分） |
 
 '''
     
