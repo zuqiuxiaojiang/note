@@ -316,11 +316,11 @@ def generate_header(md):
 <SCRIPT language=JavaScript>
 function password() {
     var maxAttempts = 3; // 最大尝试次数
-    var correctPasswords = ["逢考必過","𰻝", "𰻞"]; // 支持多个密码
+    var correctPasswords = ["biang","ㄅㄧㄤ","𰻝", "𰻞"]; // 支持多个密码
     var attempts = 0; // 当前尝试次数
 
     while (attempts < maxAttempts) {
-        var pass1 = prompt('㊗️您考試💯。請輸入：逢考必過', '逢考必過');
+        var pass1 = prompt('請輸入biangbiang麵的biang字：', '');
         if (!pass1) { // 如果用户取消输入
             alert('您取消了操作，页面将返回上一页');
             window.location.replace("https://zuqiuxiaojiang.github.io/note"); // 返回上一页

@@ -286,15 +286,15 @@ def calc_rankings(team_stats):
 
 
 # ═══════════════════════════════════════════════════════
-# 第七部分：页头生成
+# 第七部分：页头生成（含密码验证）
 # ═══════════════════════════════════════════════════════
 
 def generate_header(md):
-    """生成自定义 HTML 页头 + 图例表格"""
+    """生成自定义 HTML 页头 + 密码验证 + 图例表格"""
     nav_items = " | ".join([f'<a href="{link["url"]}">{link["text"]}</a>' for link in nav_links])
-    
+
     # 图例表格（方便外人理解emoji含义）
-    legend = f'''## 📖 图例说明
+    legend = f"""## 📖 图例说明
 
 | 符号 | 含义 |
 |:---:|:---|
@@ -304,10 +304,50 @@ def generate_header(md):
 | {ICON_WATER_LOW} | 水分偏干（扣5分） |
 | {ICON_WATER_HIGH} | 水分偏潮（扣10分） |
 
-'''
-    
-    header = f'''<!-- 引入外部CSS文件 -->
+"""
+
+    # 🔒 密码验证层（整合自用户提供的代码，已修复跳转URL）
+    password_gate = r"""<!-- 设置页面过期 -->
+<meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="pragma" content="no-cache">
+<meta http-equiv="expires" content="0">
+
+<!-- 密码验证 -->
+<SCRIPT language=JavaScript>
+function password() {
+    var maxAttempts = 3; // 最大尝试次数
+    var correctPasswords = ["biang","ㄅㄧㄤ","𰻝", "𰻞"]; // 支持多个密码
+    var attempts = 0; // 当前尝试次数
+
+    while (attempts < maxAttempts) {
+        var pass1 = prompt('請輸入biangbiang麵的biang字：', '');
+        if (!pass1) { // 如果用户取消输入
+            alert('您取消了操作，页面将返回上一页');
+            window.location.replace("https://zuqiuxiaojiang.github.io/note"); // 返回上一页
+            return;
+        }
+        if (correctPasswords.includes(pass1)) { // 检查密码是否在数组中
+            alert('密码正确！');
+            return "密码验证通过";
+        } else {
+            attempts++;
+            alert('密码错误！您还有 ' + (maxAttempts - attempts) + ' 次机会');
+        }
+    }
+    alert('您已用完所有尝试机会，页面将返回上一页');
+    window.location.replace("https://zuqiuxiaojiang.github.io/note"); // 返回上一页
+    return "密码验证失败";
+}
+
+// 调用函数
+password();
+</SCRIPT>
+"""
+
+    header = f"""<!-- 引入外部CSS文件 -->
 <link rel="stylesheet" href="styles.css">
+
+{password_gate}
 
 <h1>
 <img src="{header_image}" alt="图片" class="inline-image" />
@@ -323,7 +363,7 @@ def generate_header(md):
 </h3>
 
 {legend}
-'''
+"""
     md.append(header)
     return md
 
