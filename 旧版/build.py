@@ -323,7 +323,7 @@ function password() {
         var pass1 = prompt('請輸入biangbiang麵的biang字：', '');
         if (!pass1) { // 如果用户取消输入
             alert('您取消了操作，页面将返回上一页');
-            window.location.replace("https://zuqiuxiaojiang.github.io/note"); // 返回上一页
+            window.location.replace("https://zuqiuxiaojiang.github.io"); // 返回上一页
             return;
         }
         if (correctPasswords.includes(pass1)) { // 检查密码是否在数组中
@@ -335,7 +335,7 @@ function password() {
         }
     }
     alert('您已用完所有尝试机会，页面将返回上一页');
-    window.location.replace("https://zuqiuxiaojiang.github.io/note"); // 返回上一页
+    window.location.replace("https://zuqiuxiaojiang.github.io"); // 返回上一页
     return "密码验证失败";
 }
 
