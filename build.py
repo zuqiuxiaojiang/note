@@ -2,7 +2,6 @@ import frontmatter
 import glob
 import os
 import re
-import markdown
 
 # ═══════════════════════════════════════════════════════
 # 第一部分：配置区（按需修改）
@@ -13,13 +12,8 @@ teams = ["甲班", "乙班", "丙班", "丁班"]
 data_path = "生产数据/**/*.md"
 process_base_score = 40
 
-# 水分标准选择：0=自动判断，1=123标准(=2合格)，2=考核标准(10.5~11.5合格)
-water_standard = 0  # ← 这里改：0自动，1用2的标准，2用10.5的标准
-
-# 截图功能开关：True=生成README.md后自动截图，False=只生成md
-enable_screenshot = True  # ← 截图开关
-screenshot_width = 1400   # ← 截图宽度（像素）
-screenshot_quality = 90   # ← JPEG质量（1-100）
+# 水分标准选择：0=自动判断，1=123标准(=2合格)，2=考核标准(11~12合格)
+water_standard = 0  # ← 这里改：0自动，1用2的标准，2用11的标准
 
 # 自定义导航链接
 nav_links = [
@@ -37,8 +31,8 @@ header_title = "天使之翼"
 ICON_NORMAL = "✅"      # 正常班标记
 ICON_REPAIR = "🛠"       # 检维修标记
 ICON_WATER_OK = "👌"     # 水分合格
-ICON_WATER_LOW = "🍂"    # 水分偏低
-ICON_WATER_HIGH = "💦"   # 水分偏高
+ICON_WATER_LOW = "🍂"    # 水分偏干
+ICON_WATER_HIGH = "💦"   # 水分偏潮
 
 
 # ═══════════════════════════════════════════════════════
@@ -104,7 +98,7 @@ def get_water_status(val):
     根据 water_standard 配置选择标准：
     - 0: 自动判断（val<=5用123标准，val>5用考核标准）
     - 1: 强制123标准（=2合格，<<2扣5分，>2扣10分）
-    - 2: 强制考核标准（10.5~11.5合格，<<10.5扣5分，>11.5扣10分）
+    - 2: 强制考核标准（11~12合格，<<11扣5分，>12扣10分）
     """
     # 判断使用哪套标准
     if water_standard == 1:
@@ -113,7 +107,7 @@ def get_water_status(val):
         use_123 = False
     else:  # water_standard == 0，自动判断
         use_123 = (val <= 5)
-
+    
     if use_123:
         # 123标准：=2合格，<<2扣5分，>2扣10分
         if val == 2:
@@ -123,10 +117,10 @@ def get_water_status(val):
         else:
             return (ICON_WATER_HIGH, -10)
     else:
-        # 考核标准：10.5~11.5合格，<<10.5扣5分，>11.5扣10分
-        if 10.5 <= val <= 11.5:
+        # 考核标准：11~12合格，<<11扣5分，>12扣10分
+        if 11 <= val <= 12:
             return (ICON_WATER_OK, 0)
-        elif val < 10.5:
+        elif val < 11:
             return (ICON_WATER_LOW, -5)
         else:
             return (ICON_WATER_HIGH, -10)
@@ -190,11 +184,11 @@ def calc_team_stats(pages):
     """按班组计算所有统计数据"""
     team_stats = {}
     all_repairs = []
-
+    
     for team in teams:
         rows = [p for p in pages if p.get("班组") == team]
         rows.sort(key=lambda x: str(x.get("日期", "")))
-
+        
         蒸汽合计 = 0.0  # 用浮点数避免整数精度问题
         糖浆合计 = 0.0
         水合计 = 0.0    # 水消耗用浮点数累加，避免小数精度丢失
@@ -204,31 +198,31 @@ def calc_team_stats(pages):
         水分扣分 = 0
         合格数 = 0
         明细 = []
-
+        
         for p in rows:
             is_repair = p.get("类型") == "检维修"
             has_data = has_any_data(p) and not is_repair
-
+            
             if has_data:
                 蒸汽合计 += safe_num(p, "蒸汽消耗")
                 糖浆合计 += safe_num(p, "糖浆加量")
                 水合计   += safe_num(p, "水消耗")   # 浮点数累加
                 电合计   += safe_num(p, "电消耗")
                 正常班数 += 1
-
+            
             if is_repair:
                 检维修数 += 1
-
+            
             m = p.get("水分")
             本条扣分 = calc_water_score(m)
             水分扣分 += 本条扣分
-
+            
             if has_data and 本条扣分 == 0:
                 合格数 += 1
-
+            
             if is_repair:
                 all_repairs.append({"班组": team, "日期": p.get("日期", "-")})
-
+            
             # 明细行：正常班用✅，检维修用🛠
             if is_repair:
                 明细.append({
@@ -250,13 +244,13 @@ def calc_team_stats(pages):
                     "电": format_num(p.get("电消耗")),
                     "水分": format_water(p.get("水分"))
                 })
-
+        
         # 平均值计算：用浮点数除法，保留精度
         蒸汽糖浆比 = round(蒸汽合计 / 糖浆合计, 4) if 糖浆合计 else "-"
         水平均 = round(水合计 / 正常班数, 4) if 正常班数 else "-"  # 保留4位再格式化
         电平均 = round(电合计 / 正常班数, 4) if 正常班数 else "-"
         工艺分 = round(process_base_score / 正常班数 * 合格数, 4) if 正常班数 > 0 else 0
-
+        
         team_stats[team] = {
             "蒸汽": 蒸汽合计, "糖浆": 糖浆合计, "水": 水合计, "电": 电合计,
             "扣分": 水分扣分, "班数": 正常班数, "检维修数": 检维修数,
@@ -264,18 +258,18 @@ def calc_team_stats(pages):
             "比": 蒸汽糖浆比, "水均": 水平均, "电均": 电平均,
             "明细": 明细
         }
-
+    
     return team_stats, all_repairs
 
 
 def calc_rankings(team_stats):
     """计算各项排名"""
     stats_list = [(t, team_stats[t]) for t in teams if t in team_stats]
-
+    
     r_ratio = rank(stats_list, "比", True)
     r_water = rank(stats_list, "水均", True)
     r_elec  = rank(stats_list, "电均", True)
-
+    
     for t, s in stats_list:
         s["排名比"] = r_ratio.get(s["比"], "-")
         s["排名水"] = r_water.get(s["水均"], "-")
@@ -283,44 +277,84 @@ def calc_rankings(team_stats):
         s["积分"] = (s["排名比"] if isinstance(s["排名比"], int) else 0) + \
                     (s["排名水"] if isinstance(s["排名水"], int) else 0) + \
                     (s["排名电"] if isinstance(s["排名电"], int) else 0)
-
+    
     r_score = rank([(t, s) for t, s in stats_list], "积分", True)
     for t, s in stats_list:
         s["总排名"] = r_score.get(s["积分"], "-")
-
+    
     return stats_list
 
 
 # ═══════════════════════════════════════════════════════
-# 第七部分：页头生成
+# 第七部分：页头生成（含密码验证）
 # ═══════════════════════════════════════════════════════
 
 def generate_header(md):
-    """生成自定义 HTML 页头 + 图例表格"""
+    """生成自定义 HTML 页头 + 密码验证 + 图例表格"""
     nav_items = " | ".join([f'<a href="{link["url"]}">{link["text"]}</a>' for link in nav_links])
 
     # 图例表格（方便外人理解emoji含义）
-    legend = f'''## 📖 图例说明
+    legend = f"""## 📖 图例说明
 
 | 符号 | 含义 |
 |:---:|:---|
 | {ICON_NORMAL} | 正常班 |
 | {ICON_REPAIR} | 检维修 |
 | {ICON_WATER_OK} | 水分合格 |
-| {ICON_WATER_LOW} | 水分偏低（扣5分） |
-| {ICON_WATER_HIGH} | 水分偏高（扣10分） |
+| {ICON_WATER_LOW} | 水分偏干（扣5分） |
+| {ICON_WATER_HIGH} | 水分偏潮（扣10分） |
 
-'''
+"""
 
-    header = f'''<!-- 引入外部CSS文件 -->
+    # 🔒 密码验证层（整合自用户提供的代码，已修复跳转URL）
+    password_gate = r"""<!-- 设置页面过期 -->
+<meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="pragma" content="no-cache">
+<meta http-equiv="expires" content="0">
+
+<!-- 密码验证 -->
+<SCRIPT language=JavaScript>
+function password() {
+    var maxAttempts = 3; // 最大尝试次数
+    var correctPasswords = ["biang","ㄅㄧㄤ","𰻝", "𰻞"]; // 支持多个密码
+    var attempts = 0; // 当前尝试次数
+
+    while (attempts < maxAttempts) {
+        var pass1 = prompt('請輸入biangbiang麵的biang字：', '');
+        if (!pass1) { // 如果用户取消输入
+            alert('您取消了操作，页面将返回上一页');
+            window.location.replace("https://zuqiuxiaojiang.github.io"); // 返回上一页
+            return;
+        }
+        if (correctPasswords.includes(pass1)) { // 检查密码是否在数组中
+            alert('密码正确！');
+            return "密码验证通过";
+        } else {
+            attempts++;
+            alert('密码错误！您还有 ' + (maxAttempts - attempts) + ' 次机会');
+        }
+    }
+    alert('您已用完所有尝试机会，页面将返回上一页');
+    window.location.replace("https://zuqiuxiaojiang.github.io"); // 返回上一页
+    return "密码验证失败";
+}
+
+// 调用函数
+password();
+</SCRIPT>
+"""
+
+    header = f"""<!-- 引入外部CSS文件 -->
 <link rel="stylesheet" href="styles.css">
+
+{password_gate}
 
 <h1>
 <img src="{header_image}" alt="图片" class="inline-image" />
 <span class="inline-title">{header_title}</span>
 </h1>
 
-## 首页：
+## NOTE：
 
 <h3>
 <p>
@@ -329,7 +363,7 @@ def generate_header(md):
 </h3>
 
 {legend}
-'''
+"""
     md.append(header)
     return md
 
@@ -401,111 +435,24 @@ def generate_detail_tables(md, team_stats):
         for d in s["明细"]:
             md.append(f"| {d['日期']} | {d['类型']} | {d['蒸汽']} | {d['糖浆']} | {d['水']} | {d['电']} | {d['水分']} |\n")
         # 小计行：类型列显示正常班和检维修数量，保持7列对齐
-        md.append(f"| **小计** | {ICON_NORMAL}:{s['班数']} \| {ICON_REPAIR}:{s['检维修数']} | {format_num(s['蒸汽'])} | {format_num(s['糖浆'])} | {format_num(s['水'])} | {format_num(s['电'])} | {s['扣分']} |\n")
+        md.append(f"| **小计** | {ICON_NORMAL}:{s['班数']} \\| {ICON_REPAIR}:{s['检维修数']} | {format_num(s['蒸汽'])} | {format_num(s['糖浆'])} | {format_num(s['水'])} | {format_num(s['电'])} | {s['扣分']} |\n")
         md.append("\n")
     return md
 
 
 # ═══════════════════════════════════════════════════════
-# 第九部分：截图功能（新增）
-# ═══════════════════════════════════════════════════════
-
-def take_screenshot(md_content, output_path="README.png"):
-    """
-    将生成的Markdown内容转为HTML，再用Playwright截图保存为图片
-    需要安装：pip install markdown playwright
-    首次运行：playwright install chromium
-    """
-    try:
-        from playwright.sync_api import sync_playwright
-    except ImportError:
-        print("⚠️ 未安装 playwright，跳过截图。请运行：pip install playwright")
-        return False
-
-    # 将 Markdown 转为 HTML
-    html_body = markdown.markdown(md_content, extensions=['tables', 'fenced_code'])
-
-    # 包装成完整 HTML（加样式让表格更好看）
-    html_full = f'''<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
-<style>
-    body {{
-        font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
-        padding: 40px;
-        max-width: {screenshot_width}px;
-        margin: 0 auto;
-        background: #fff;
-        color: #333;
-        line-height: 1.6;
-    }}
-    h1 {{ font-size: 28px; border-bottom: 2px solid #eee; padding-bottom: 10px; }}
-    h2 {{ font-size: 22px; margin-top: 30px; color: #2c3e50; }}
-    h3 {{ font-size: 18px; color: #34495e; }}
-    table {{
-        border-collapse: collapse;
-        width: 100%;
-        margin: 15px 0;
-        font-size: 14px;
-    }}
-    th, td {{
-        border: 1px solid #ddd;
-        padding: 8px 12px;
-        text-align: center;
-    }}
-    th {{ background: #f8f9fa; font-weight: bold; }}
-    tr:nth-child(even) {{ background: #fafafa; }}
-    img {{ max-width: 60px; vertical-align: middle; }}
-    a {{ color: #3498db; text-decoration: none; }}
-    hr {{ border: none; border-top: 1px solid #eee; margin: 30px 0; }}
-</style>
-</head>
-<body>
-{html_body}
-</body>
-</html>'''
-
-    # 写入临时 HTML 文件
-    temp_html = "_temp_screenshot.html"
-    with open(temp_html, "w", encoding="utf-8") as f:
-        f.write(html_full)
-
-    # 用 Playwright 截图
-    with sync_playwright() as p:
-        browser = p.chromium.launch()
-        page = browser.new_page(viewport={"width": screenshot_width, "height": 800})
-        page.goto(f"file:///{os.path.abspath(temp_html)}")
-        page.wait_for_load_state("networkidle")
-
-        # 获取页面实际高度，确保截全
-        page_height = page.evaluate("document.documentElement.scrollHeight")
-        page.set_viewport_size({"width": screenshot_width, "height": page_height})
-        page.wait_for_timeout(500)  # 等渲染稳定
-
-        # 截图（全页）
-        page.screenshot(path=output_path, full_page=True, type="jpeg", quality=screenshot_quality)
-        browser.close()
-
-    # 清理临时文件
-    os.remove(temp_html)
-    print(f"📸 截图已保存: {output_path}")
-    return True
-
-
-# ═══════════════════════════════════════════════════════
-# 第十部分：主程序
+# 第九部分：主程序
 # ═══════════════════════════════════════════════════════
 
 def main():
     pages = load_pages()
     team_stats, all_repairs = calc_team_stats(pages)
-
+    
     md = []
-
+    
     # 先生成自定义页头（含图例）
     md = generate_header(md)
-
+    
     # 再生成报表内容
 #    md.append(f"🌐 [在线报表]({report_url})\n\n")
     md = generate_summary_table(md, team_stats)
@@ -513,18 +460,9 @@ def main():
     md = generate_ranking_table(md, team_stats)
     md = generate_repair_table(md, all_repairs)
     md = generate_detail_tables(md, team_stats)
-
-    md_content = "".join(md)
-
-    # 保存 Markdown 文件
+    
     with open("README.md", "w", encoding="utf-8") as f:
-        f.write(md_content)
-    print("✅ README.md 已生成")
-
-    # 截图功能（可选）
-    if enable_screenshot:
-        print("📸 正在生成截图...")
-        take_screenshot(md_content, "README.png")
+        f.writelines(md)
 
 
 if __name__ == "__main__":
