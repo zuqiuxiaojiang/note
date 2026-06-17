@@ -316,7 +316,7 @@ def generate_header(md):
 <SCRIPT language=JavaScript>
 function password() {
     var maxAttempts = 3; // 最大尝试次数
-    var correctPasswords = ["biang","ㄅㄧㄤ","𰻝", "𰻞"]; // 支持多个密码
+    var correctPasswords = ["ㄅㄧㄤ","𰻝", "𰻞"]; // 支持多个密码
     var attempts = 0; // 当前尝试次数
 
     while (attempts < maxAttempts) {
