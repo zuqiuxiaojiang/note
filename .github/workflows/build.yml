@@ -3,6 +3,9 @@ name: Build Report
 on:
   push:
     branches: [main]
+    # 当只有 README.md 变更时，不触发此工作流（防止循环）
+    paths-ignore:
+      - 'README.md'
   workflow_dispatch:
 
 jobs:
@@ -11,6 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Setup Python
@@ -31,7 +35,8 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add README.md
-          # 使用 [skip ci] 防止循环触发
           git commit -m "auto update [skip ci]" || echo "nothing to commit"
+          # 先拉取最新代码避免冲突
+          git pull --rebase origin main || true
           git push
         timeout-minutes: 2
