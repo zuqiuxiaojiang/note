@@ -1,56 +1,127 @@
-
 <!-- 引入外部CSS文件 -->
 <link rel="stylesheet" href="styles.css">
 
-<!--在<head>后加入如下代码（设置页面过期）-->
+<!-- 设置页面过期 -->
 <meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="pragma" content="no-cache">
 <meta http-equiv="expires" content="0">
-<!--在</head>前加入如上代码（设置页面过期）-->
 
-<!--在<head>后加入如下代码（使用window.location.replace()替换了history.go(-1)）-->
+<!-- 密码验证 -->
 <SCRIPT language=JavaScript>
 function password() {
     var maxAttempts = 3; // 最大尝试次数
-    var correctPasswords = ["逢考必過","𰻝", "𰻞"]; // 支持多个密码
+    var correctPasswords = ["ㄅㄧㄤ","𰻝", "𰻞"]; // 支持多个密码
     var attempts = 0; // 当前尝试次数
 
     while (attempts < maxAttempts) {
-        var pass1 = prompt('㊗️您考試💯。請輸入：逢考必過', '逢考必過');
+        var pass1 = prompt('請輸入biangbiang麵的biang字：', '');
         if (!pass1) { // 如果用户取消输入
             alert('您取消了操作，页面将返回上一页');
-            window.location.replace("https://zuqiuxiaojiang.github.io/note"); // 替换为上一页的地址
-            return; // 提前退出函数
+            window.location.replace("https://zuqiuxiaojiang.github.io"); // 返回上一页
+            return;
         }
         if (correctPasswords.includes(pass1)) { // 检查密码是否在数组中
             alert('密码正确！');
-            return "密码验证通过"; // 返回一个明确的值
+            return "密码验证通过";
         } else {
             attempts++;
             alert('密码错误！您还有 ' + (maxAttempts - attempts) + ' 次机会');
         }
     }
     alert('您已用完所有尝试机会，页面将返回上一页');
-    window.location.replace("https://zuqiuxiaojiang.github.io/note"); // 替换为上一页的地址
-    return "密码验证失败"; // 返回一个明确的值
+    window.location.replace("https://zuqiuxiaojiang.github.io"); // 返回上一页
+    return "密码验证失败";
 }
 
-// 调用函数，但不直接写入文档
+// 调用函数
 password();
 </SCRIPT>
-<!--在</head>前加入如上代码（使用window.location.replace()替换了history.go(-1)）-->
+
 
 <h1>
-<img src="./国旗-球形.png" alt="图片" class="inline-image" />
-<span class="inline-title">笔记</span>
+<img src="./翼.png" alt="图片" class="inline-image" />
+<span class="inline-title">天使之翼</span>
 </h1>
 
-## 🚏🚶⛩️🏃：
+## NOTE：
 
-[主站](https://zuqiuxiaojiang.github.io) | [-站](https://zuqiuxiaojiang.github.io/-) | [_站](https://zuqiuxiaojiang.github.io/_)
+<h3>
+<p>
+	<a href="https://zuqiuxiaojiang.github.io">首页</a> | <a href="https://zuqiuxiaojiang.github.io/-">个人</a> | <a href="https://zuqiuxiaojiang.github.io/_">工作</a> | <a href="https://zuqiuxiaojiang.github.io/note">NOTE</a>
+</p>
+</h3>
 
-###### *📱🉑扫码下方并关注*
+## 📖 图例说明
 
-| VX公众号 | QQ频道号 |
-| :---: | :---: |
-| <img src="./WX公众号.jpg" width="60"> | <img src="./QQ频道号.jpg" width="60"> |
+| 符号 | 含义 |
+|:---:|:---|
+| ✅ | 正常班 |
+| 🛠 | 检维修 |
+| 👌 | 水分合格 |
+| 🍂 | 水分偏干（扣5分） |
+| 💦 | 水分偏潮（扣10分） |
+
+
+## 📊 消耗统计汇总
+
+| 班组 | 蒸汽用量 | 糖浆加量 | 水量 | 电量 | 水分扣分 |
+|:---:|:---:|:---:|:---:|:---:|:---:|
+| 甲班 | 199 | 91 | 42.2 | 8975.72 | 0 |
+| 乙班 | 205 | 84 | 41.7 | 9012.012 | 0 |
+| 丙班 | 367 | 172 | 83.3 | 18029.04 | 0 |
+| 丁班 | 161 | 85 | 42.2 | 8986.408 | 0 |
+
+## 📈 平均分
+
+| 班组 | 蒸汽÷糖浆 | 水量÷正常班 | 电量÷正常班 | 工艺分 |
+|:---:|:---:|:---:|:---:|:---:|
+| 甲班 | 2.1868 | 42.2 | 8975.72 | 40 |
+| 乙班 | 2.4405 | 41.7 | 9012.012 | 40 |
+| 丙班 | 2.1337 | 41.65 | 9014.52 | 40 |
+| 丁班 | 1.8941 | 42.2 | 8986.408 | 40 |
+
+## 🏆 积分排名
+
+| 班组 | 蒸汽÷糖浆排名 | 水消耗排名 | 电消耗排名 | 各班积分 | 最低消耗排名 |
+|:---:|:---:|:---:|:---:|:---:|:---:|
+| 甲班 | 3 | 3 | 1 | 7 | 2 |
+| 乙班 | 4 | 2 | 3 | 9 | 3 |
+| 丙班 | 2 | 1 | 4 | 7 | 2 |
+| 丁班 | 1 | 3 | 2 | 6 | 1 |
+
+---
+
+## 📋 各班明细
+
+### 甲班（1）
+
+| 日期 | 类型 | 蒸汽消耗 | 糖浆加量 | 水消耗 | 电消耗 | 水分 |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| 9-16 | ✅ | 199 | 91 | 42.2 | 8975.72 | - |
+| 9-18 | ✅ | - | - | - | - | - |
+| **小计** | ✅:1 \| 🛠:0 | 199 | 91 | 42.2 | 8975.72 | 0 |
+
+### 乙班（1）
+
+| 日期 | 类型 | 蒸汽消耗 | 糖浆加量 | 水消耗 | 电消耗 | 水分 |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| 9-17 | ✅ | 205 | 84 | 41.7 | 9012.012 | - |
+| 9-18 | ✅ | - | - | - | - | - |
+| **小计** | ✅:1 \| 🛠:0 | 205 | 84 | 41.7 | 9012.012 | 0 |
+
+### 丙班（2）
+
+| 日期 | 类型 | 蒸汽消耗 | 糖浆加量 | 水消耗 | 电消耗 | 水分 |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| 9-16 | ✅ | 165 | 85 | 42 | 9036.492 | 👌 |
+| 9-17 | ✅ | 202 | 87 | 41.3 | 8992.548 | - |
+| **小计** | ✅:2 \| 🛠:0 | 367 | 172 | 83.3 | 18029.04 | 0 |
+
+### 丁班（1）
+
+| 日期 | 类型 | 蒸汽消耗 | 糖浆加量 | 水消耗 | 电消耗 | 水分 |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| 9-16 | ✅ | 161 | 85 | 42.2 | 8986.408 | - |
+| 9-17 | ✅ | - | - | - | - | - |
+| **小计** | ✅:1 \| 🛠:0 | 161 | 85 | 42.2 | 8986.408 | 0 |
+
