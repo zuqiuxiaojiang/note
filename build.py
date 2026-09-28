@@ -33,6 +33,7 @@ ICON_REPAIR = "🛠"       # 检维修标记
 ICON_WATER_OK = "👌"     # 水分合格
 ICON_WATER_LOW = "🍂"    # 水分偏干
 ICON_WATER_HIGH = "💦"   # 水分偏潮
+ICON_WATER_NONE = "🈚️"   # 无料样（不参与水分计算）
 
 
 # ═══════════════════════════════════════════════════════
@@ -131,6 +132,8 @@ def format_water(m):
     val = clean_number(m)
     if val is None:
         return ICON_WATER_OK  # 未填写水分，默认合格
+    if val == 0:
+        return ICON_WATER_NONE  # 水分填0表示无料样，不参与水分计算
     emoji, _ = get_water_status(val)
     return emoji
 
@@ -140,6 +143,8 @@ def calc_water_score(m):
     val = clean_number(m)
     if val is None:
         return 0
+    if val == 0:
+        return 0  # 水分填0表示无料样，不扣分
     _, score = get_water_status(val)
     return score
 
@@ -217,7 +222,7 @@ def calc_team_stats(pages):
             本条扣分 = calc_water_score(m)
             水分扣分 += 本条扣分
             
-            if has_data and 本条扣分 == 0:
+            if has_data and 本条扣分 == 0 and clean_number(m) != 0:
                 合格数 += 1
             
             if is_repair:
@@ -303,6 +308,7 @@ def generate_header(md):
 | {ICON_WATER_OK} | 水分合格 |
 | {ICON_WATER_LOW} | 水分偏干（扣5分） |
 | {ICON_WATER_HIGH} | 水分偏潮（扣10分） |
+| {ICON_WATER_NONE} | 无料样（不参与水分计算） |
 
 """
 
