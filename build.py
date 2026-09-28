@@ -130,7 +130,7 @@ def format_water(m):
     """只返回颜色emoji"""
     val = clean_number(m)
     if val is None:
-        return "-"
+        return ICON_WATER_OK  # 未填写水分，默认合格
     emoji, _ = get_water_status(val)
     return emoji
 
