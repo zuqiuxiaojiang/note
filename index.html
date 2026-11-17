@@ -4,21 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>生产报表</title>
-<!-- 顺序不能变：先 config，再 data，最后才是内联逻辑 -->
+<!-- 顺序不能变：先 CSS，再 config，再 data -->
+<link rel="stylesheet" href="styles.css">
 <script src="config.js"></script>
 <script src="data.js"></script>
-<style>
-  body { font-family: system-ui, -apple-system, "PingFang SC", sans-serif;
-         max-width: 1000px; margin: 0 auto; padding: 20px; line-height: 1.5; }
-  h1 img { vertical-align: middle; height: 1.2em; margin-right: 8px; }
-  h3 a { margin-right: 14px; }
-  table { border-collapse: collapse; margin: 10px 0; width: 100%; }
-  th, td { border: 1px solid #d1d5db; padding: 5px 10px; text-align: center; }
-  th { background: #f4f4f4; }
-  h2 { margin-top: 28px; border-left: 4px solid #3b82f6; padding-left: 10px; }
-  h3 { margin-top: 20px; }
-  .legend td:first-child { font-size: 20px; }
-</style>
 </head>
 <body>
 <div id="app"></div>
@@ -29,7 +18,7 @@
  * ============================================================
  *
  *  【一般不用改这个文件】
- *  数据在 data.js，外观和标准在 config.js。
+ *  数据在 data.js，外观在 styles.css，名单/标准在 config.js。
  *
  *  这里的代码做了这几件事：
  *    1. 清洗字段（数字带引号、空格、单位都能识别；null/undefined 视为空）
@@ -43,7 +32,7 @@
  *  地归为"空值"，后续逻辑统一按空值处理 —— 所以 data.js 里不写字段
  *  和写 null 完全等价，代码无需改动。
  *
- *  【想改算法时才动这里】改完逻辑，data.js / config.js 不用碰。
+ *  【想改算法时才动这里】改完逻辑，data.js / config.js / styles.css 不用碰。
  * ============================================================ */
 
 // ── 数字清洗：把各种脏数据统一成 number 或 null ──
@@ -108,7 +97,7 @@ function calcTeamStats(data) {
   const stats = {}, repairs = [];
   for (const team of REPORT_CONFIG.teams) {
     const rows = data.filter(p => p.班组 === team)
-                     .sort((a, b) => String(a.日期).localeCompare(String(b.日期)));
+                     .sort((a, b) => String(a.日期 || '').localeCompare(String(b.日期 || '')));
     if (!rows.length) continue;
 
     let 蒸汽 = 0, 糖浆 = 0, 水 = 0, 电 = 0;
@@ -128,7 +117,7 @@ function calcTeamStats(data) {
       }
       if (isRepair) {
         检维修数++;
-        repairs.push({ 班组: team, 日期: p.日期 });
+        repairs.push({ 班组: team, 日期: p.日期 || '-' });
       }
 
       const s = calcWaterScore(p.水分);
@@ -194,8 +183,8 @@ function makeTable(headRow, rows) {
 function renderHeader() {
   const app = document.getElementById('app');
   const h1 = h('h1');
-  h1.appendChild(h('img', { src: REPORT_CONFIG.headerImage, alt: '' }));
-  h1.appendChild(h('span', {}, REPORT_CONFIG.title));
+  h1.appendChild(h('img', { src: REPORT_CONFIG.headerImage, alt: '', class: 'inline-image' }));
+  h1.appendChild(h('span', { class: 'inline-title' }, REPORT_CONFIG.title));
   app.appendChild(h1);
 
   const nav = h('h3');

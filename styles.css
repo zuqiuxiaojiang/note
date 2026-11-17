@@ -1,154 +1,105 @@
-/* 设置网页字符编码为UTF-8 */
-/* 响应式设计：确保网页在不同设备上自适应 */
+/* ============================================================
+ *  styles.css —— 样式总表（改外观只改这个文件）
+ * ============================================================
+ *
+ *  分两大块：
+ *    ① 通用样式（原文件已有，body/h1~h6/a/table/img/播放器/响应式）
+ *    ② 报表专用样式（文件末尾，图例/居中表格/头图行内对齐）
+ *
+ *  想调外观改这里，不用动 index.html。
+ * ============================================================ */
+
+/* ───────────── ① 通用样式 ───────────── */
+
 body {
-  font-family: Arial, sans-serif; /* 设置网页字体为Arial或无衬线字体 */
-  margin: 10px; /* 设置网页内容与边界的外边距为20px */
+  font-family: Arial, sans-serif;
+  margin: 10px;
 }
 
 /* 页面头部样式 */
 .header {
-  display: flex; /* 使用flex布局来对齐头部内容 */
-  align-items: center; /* 垂直居中对齐 */
-  margin-bottom: 20px; /* 头部与下方内容的间距 */
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
 }
 
-/* 头部图像样式 */
 .header img {
-  margin-right: 10px; /* 头部图像与标题的间距 */
-  width: 50px; /* 图像宽度 */
-  height: auto; /* 图像高度自动适应 */
+  margin-right: 10px;
+  width: 50px;
+  height: auto;
 }
 
 html {
-  /* 浏览器默认的字体大小和行高 */
-  font-size: 100%; /* 通常等于16px */
-  line-height: 1.15; /* 默认的行高 */
-  -webkit-text-size-adjust: 100%; /* 防止字体缩放 */
+  font-size: 100%;
+  line-height: 1.15;
+  -webkit-text-size-adjust: 100%;
 }
 
-/* 标题样式 */
 h1, h2, h3, h4, h5, h6 {
-  /* 标题元素的默认样式 */
-  margin-top: 0.67em; /* 顶部边距 */
-  margin-bottom: 0.67em; /* 底部边距 */
-  font-weight: bold; /* 默认加粗 */
-  line-height: 1.2; /* 行高 */
+  margin-top: 0.67em;
+  margin-bottom: 0.67em;
+  font-weight: bold;
+  line-height: 1.2;
 }
 
-/* 链接样式 */
 a {
-  margin-right: 10px; /* 每个链接之间的间距 */
-  text-decoration: none; /* 去掉链接下划线 */
-  color: #007BFF; /* 链接颜色 */
+  margin-right: 10px;
+  text-decoration: none;
+  color: #007BFF;
 }
 
-/* 表格样式 */
 table {
-  width: 100%; /* 表格宽度自适应容器 */
-  border-collapse: collapse; /* 合并边框 */
-  margin: 0 auto; /* 水平居中 */
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 auto;
 }
 
 th, td {
-  padding: 10px; /* 单元格内边距 */
-  border: 1px solid #ddd; /* 单元格边框样式 */
-  text-align: left; /* 文本对齐方式 */
+  padding: 10px;
+  border: 1px solid #ddd;
+  text-align: left;
 }
 
-/* 图片样式 */
 img {
-  max-width: 100%; /* 图片最大宽度为容器宽度 */
-  height: auto; /* 高度自适应 */
+  max-width: 100%;
+  height: auto;
 }
 
-/* 音频播放器样式 */
+/* 音频播放器 */
 .audio-player {
-  width: 100%; /* 播放器宽度自适应 */
-  max-width: 500px; /* 最大宽度限制 */
-  margin: 0 auto; /* 水平居中 */
-  background: #f5f5f5; /* 背景颜色 */
-  border: 1px solid #ccc; /* 边框样式 */
-  padding: 10px; /* 内边距 */
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  background: #f5f5f5;
+  border: 1px solid #ccc;
+  padding: 10px;
 }
-
-.audio-player controls {
-  background: #fff; /* 控件背景颜色 */
-}
-
 .audio-player button {
-  background: none; /* 按钮背景透明 */
-  border: none; /* 移除按钮边框 */
-  cursor: pointer; /* 鼠标悬停时显示指针 */
+  background: none;
+  border: none;
+  cursor: pointer;
 }
-
 .audio-player:hover {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 鼠标悬停时添加阴影 */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
-
 .audio-player button:hover {
-  background: #ddd; /* 鼠标悬停时按钮背景颜色 */
+  background: #ddd;
 }
 
-/* 视频播放器样式 */
+/* 视频播放器 */
 .video-player {
-  position: relative; /* 设置相对定位 */
-  width: 100%; /* 播放器宽度自适应 */
-  max-width: 800px; /* 最大宽度限制 */
-  margin: 0 auto; /* 水平居中 */
-  overflow: hidden; /* 隐藏超出部分 */
+  position: relative;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  overflow: hidden;
 }
-
 .video-player video {
-  width: 100%; /* 视频宽度自适应 */
-  height: auto; /* 高度自适应 */
+  width: 100%;
+  height: auto;
 }
 
-/* 响应式设计 */
-@media (max-width: 600px) {
-  /* 小屏幕设备 */
-  .audio-player {
-	width: 90%; /* 在小屏幕上缩小播放器宽度 */
-  }
-
-  table {
-	display: block; /* 在小屏幕上将表格转换为块级元素 */
-	overflow-x: auto; /* 水平滚动条 */
-	white-space: nowrap; /* 防止内容换行 */
-  }
-}
-
-@media (max-width: 768px) {
-  /* 平板设备 */
-  img {
-	border-radius: 5px; /* 在小屏幕上添加圆角效果 */
-	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* 添加阴影 */
-  }
-
-  .video-player {
-	max-width: 100%; /* 在小屏幕上调整最大宽度 */
-  }
-}
-
-@media (min-width: 768px) and (max-width: 991px) {
-  /* 平板设备 */
-  .container {
-	padding: 30px; /* 平板设备上的内边距 */
-  }
-}
-
-@media (min-width: 992px) {
-  /* 桌面设备 */
-  .container {
-	padding: 40px; /* 桌面设备上的内边距 */
-  }
-}
-
-.options {
-	list-style: none;
-	padding: 0;
-}
-
-  /* 图标与标题在同一行 */
+/* 图标与标题同行 */
 .inline-image {
   display: inline-block;
   height: 45px;
@@ -157,4 +108,89 @@ img {
 .inline-title {
   display: inline-block;
   vertical-align: middle;
+}
+
+/* 响应式 */
+@media (max-width: 600px) {
+  .audio-player { width: 90%; }
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}
+@media (max-width: 768px) {
+  img { border-radius: 5px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); }
+  .video-player { max-width: 100%; }
+}
+@media (min-width: 768px) and (max-width: 991px) {
+  .container { padding: 30px; }
+}
+@media (min-width: 992px) {
+  .container { padding: 40px; }
+}
+
+.options {
+  list-style: none;
+  padding: 0;
+}
+
+/* ───────────── ② 报表专用样式 ───────────── */
+
+/* 主容器：限制最大宽度、居中 */
+#app {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  line-height: 1.5;
+}
+
+/* 头图 + 标题行 */
+#app h1 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 22px;
+}
+
+/* 导航链接行（h3 里排一排） */
+#app h3 {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-weight: normal;
+}
+
+/* 每张表的章节标题：左侧竖条，显眼 */
+#app h2 {
+  margin-top: 28px;
+  padding-left: 10px;
+  border-left: 4px solid #3b82f6;
+}
+
+/* 报表表格：居中 + 表头灰底（覆盖通用样式里的 left 对齐） */
+#app table {
+  margin: 10px 0;
+}
+#app th,
+#app td {
+  text-align: center;
+  padding: 5px 10px;
+}
+#app th {
+  background: #f4f4f4;
+}
+
+/* 图例第一列（emoji）放大一点 */
+#app .legend td:first-child {
+  font-size: 20px;
+}
+
+/* 深色模式（系统偏好自动切换） */
+@media (prefers-color-scheme: dark) {
+  body { background: #181a1b; color: #e8e6e3; }
+  #app th { background: #2a2d2f; }
+  #app th, #app td { border-color: #3a3d3f; }
+  a { color: #6aa9ff; }
 }
