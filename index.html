@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>生产报表</title>
+<!-- 顺序不能变：先 config，再 data，最后才是内联逻辑 -->
+<script src="config.js"></script>
+<script src="data.js"></script>
+<style>
+  body { font-family: system-ui, -apple-system, "PingFang SC", sans-serif;
+         max-width: 1000px; margin: 0 auto; padding: 20px; line-height: 1.5; }
+  h1 img { vertical-align: middle; height: 1.2em; margin-right: 8px; }
+  h3 a { margin-right: 14px; }
+  table { border-collapse: collapse; margin: 10px 0; width: 100%; }
+  th, td { border: 1px solid #d1d5db; padding: 5px 10px; text-align: center; }
+  th { background: #f4f4f4; }
+  h2 { margin-top: 28px; border-left: 4px solid #3b82f6; padding-left: 10px; }
+  h3 { margin-top: 20px; }
+  .legend td:first-child { font-size: 20px; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* ============================================================
+ *  index.html —— 业务逻辑（统计 / 排名 / 渲染）
+ * ============================================================
+ *
+ *  【一般不用改这个文件】
+ *  数据在 data.js，外观和标准在 config.js。
+ *
+ *  这里的代码做了这几件事：
+ *    1. 清洗字段（数字带引号、空格、单位都能识别；null/undefined 视为空）
+ *    2. 按 config.js 的 waterStandard 判定水分合格与否、扣几分
+ *    3. 按班组汇总 蒸汽/糖浆/水/电、正常班数、检修数、合格数、工艺分
+ *    4. 算排名（蒸汽÷糖浆、水均、电均）、积分、总排名
+ *    5. 渲染成 5 张表：图例 / 汇总 / 平均 / 排名 / 明细
+ *
+ *  【为什么省略字段也能跑】
+ *  所有字段读取都经过 cleanNumber，它把 undefined 和 null 一视同仁
+ *  地归为"空值"，后续逻辑统一按空值处理 —— 所以 data.js 里不写字段
+ *  和写 null 完全等价，代码无需改动。
+ *
+ *  【想改算法时才动这里】改完逻辑，data.js / config.js 不用碰。
+ * ============================================================ */
+
+// ── 数字清洗：把各种脏数据统一成 number 或 null ──
+function cleanNumber(v) {
+  if (v === undefined || v === null) return null;   // ← 省略 = null
+  if (typeof v === 'number') return isNaN(v) ? null : v;
+  if (typeof v !== 'string') return null;
+  const s = v.trim().replace(/^["'‘’"“”]+|["'‘’"“”]+$/g, '').replace(/[,，]/g, '');
+  const m = s.match(/^-?\d+(\.\d+)?/);
+  return m ? parseFloat(m[0]) : null;
+}
+function safeNum(p, k) { const v = cleanNumber(p[k]); return v !== null ? v : 0; }
+
+// ── 是否有任意消耗数据（决定是否算"正常班"） ──
+function hasAnyData(p) {
+  return ['蒸汽消耗', '糖浆加量', '水消耗', '电消耗'].some(k => cleanNumber(p[k]) !== null);
+}
+
+// ── 格式化数字：最多4位小数，去掉末尾0 ──
+function formatNum(v) {
+  if (v === undefined || v === null || v === '' || v === '-') return '-';
+  const n = parseFloat(v);
+  if (isNaN(n)) return String(v);
+  return n.toFixed(4).replace(/\.?0+$/, '');
+}
+
+// ── 水分判定（标准来自 config.js） ──
+const IC = REPORT_CONFIG.icons;
+function getWaterStatus(val) {
+  const use123 = REPORT_CONFIG.waterStandard === 1
+              || (REPORT_CONFIG.waterStandard === 0 && val <= 5);
+  if (use123) {
+    if (val === 2) return [IC.waterOk, 0];
+    return val < 2 ? [IC.waterLow, -5] : [IC.waterHigh, -10];
+  }
+  if (val >= 10.5 && val <= 11.5) return [IC.waterOk, 0];
+  return val < 10.5 ? [IC.waterLow, -5] : [IC.waterHigh, -10];
+}
+function formatWater(m) {
+  const v = cleanNumber(m);
+  if (v === null) return IC.waterOk;    // 未填写 = 默认合格
+  if (v === 0) return IC.waterNone;     // 填 0 = 无料样
+  return getWaterStatus(v)[0];
+}
+function calcWaterScore(m) {
+  const v = cleanNumber(m);
+  if (v === null || v === 0) return 0;  // 未填写或无料样都不扣分
+  return getWaterStatus(v)[1];
+}
+
+// ── 密集排名：相同数值同名次，不跳号 ──
+function rank(list, key, asc = true) {
+  const nums = list.filter(x => typeof x[1][key] === 'number').map(x => x[1][key]);
+  const uniq = [...new Set(nums)].sort((a, b) => asc ? a - b : b - a);
+  const map = {};
+  uniq.forEach((v, i) => map[v] = i + 1);
+  return map;
+}
+
+// ── 按班组统计 ──
+function calcTeamStats(data) {
+  const stats = {}, repairs = [];
+  for (const team of REPORT_CONFIG.teams) {
+    const rows = data.filter(p => p.班组 === team)
+                     .sort((a, b) => String(a.日期).localeCompare(String(b.日期)));
+    if (!rows.length) continue;
+
+    let 蒸汽 = 0, 糖浆 = 0, 水 = 0, 电 = 0;
+    let 正常班数 = 0, 扣分 = 0, 合格数 = 0, 检维修数 = 0;
+    const 明细 = [];
+
+    for (const p of rows) {
+      const isRepair = p.类型 === '检维修';
+      const hasData = hasAnyData(p) && !isRepair;
+
+      if (hasData) {
+        蒸汽 += safeNum(p, '蒸汽消耗');
+        糖浆 += safeNum(p, '糖浆加量');
+        水   += safeNum(p, '水消耗');
+        电   += safeNum(p, '电消耗');
+        正常班数++;
+      }
+      if (isRepair) {
+        检维修数++;
+        repairs.push({ 班组: team, 日期: p.日期 });
+      }
+
+      const s = calcWaterScore(p.水分);
+      扣分 += s;
+      // 合格班：有数据 + 水分不扣分 + 水分不是"无料样(0)"
+      if (hasData && s === 0 && cleanNumber(p.水分) !== 0) 合格数++;
+
+      明细.push(isRepair
+        ? { 日期: p.日期 || '-', 类型: IC.repair, 蒸汽: '-', 糖浆: '-', 水: '-', 电: '-', 水分: formatWater(p.水分) }
+        : { 日期: p.日期 || '-', 类型: IC.normal,
+            蒸汽: formatNum(p.蒸汽消耗), 糖浆: formatNum(p.糖浆加量),
+            水: formatNum(p.水消耗),     电: formatNum(p.电消耗),
+            水分: formatWater(p.水分) });
+    }
+
+    stats[team] = {
+      蒸汽, 糖浆, 水, 电, 扣分, 班数: 正常班数, 检维修数, 合格数,
+      比:   糖浆 ? +(蒸汽 / 糖浆).toFixed(4) : '-',
+      水均: 正常班数 ? +(水 / 正常班数).toFixed(4) : '-',
+      电均: 正常班数 ? +(电 / 正常班数).toFixed(4) : '-',
+      工艺分: 正常班数 ? +(REPORT_CONFIG.processBaseScore / 正常班数 * 合格数).toFixed(4) : 0,
+      明细,
+    };
+  }
+  return { stats, repairs };
+}
+
+// ── 排名 + 积分 + 总排名 ──
+function calcRankings(stats) {
+  const list = REPORT_CONFIG.teams.map(t => [t, stats[t]]).filter(x => x[1]);
+  const rB = rank(list, '比'), rW = rank(list, '水均'), rE = rank(list, '电均');
+  list.forEach(([, s]) => {
+    s.排名比 = rB[s.比] || '-';
+    s.排名水 = rW[s.水均] || '-';
+    s.排名电 = rE[s.电均] || '-';
+    s.积分 = (s.排名比 === '-' ? 0 : s.排名比)
+           + (s.排名水 === '-' ? 0 : s.排名水)
+           + (s.排名电 === '-' ? 0 : s.排名电);
+  });
+  const rS = rank(list, '积分');
+  list.forEach(([, s]) => { s.总排名 = rS[s.积分] || '-'; });
+  return list;
+}
+
+/* ============================================================
+ *  渲染（下面的代码一般不用看）
+ * ============================================================ */
+const h = (tag, attrs = {}, children = []) => {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+  for (const c of [].concat(children)) {
+    el.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+  }
+  return el;
+};
+function makeTable(headRow, rows) {
+  const t = h('table');
+  t.appendChild(h('thead', {}, h('tr', {}, headRow.map(x => h('th', {}, x)))));
+  t.appendChild(h('tbody', {}, rows.map(r => h('tr', {}, r.map(c => h('td', {}, c))))));
+  return t;
+}
+
+function renderHeader() {
+  const app = document.getElementById('app');
+  const h1 = h('h1');
+  h1.appendChild(h('img', { src: REPORT_CONFIG.headerImage, alt: '' }));
+  h1.appendChild(h('span', {}, REPORT_CONFIG.title));
+  app.appendChild(h1);
+
+  const nav = h('h3');
+  REPORT_CONFIG.navLinks.forEach(l => nav.appendChild(h('a', { href: l.url }, l.text)));
+  app.appendChild(nav);
+}
+
+function renderLegend() {
+  const app = document.getElementById('app');
+  app.appendChild(h('h2', {}, '📖 图例说明'));
+  const t = makeTable(['符号', '含义'], [
+    [IC.normal,    '正常班'],
+    [IC.repair,    '检维修'],
+    [IC.waterOk,   '水分合格'],
+    [IC.waterLow,  '水分偏干（扣5分）'],
+    [IC.waterHigh, '水分偏潮（扣10分）'],
+    [IC.waterNone, '无料样（不参与水分计算）'],
+  ]);
+  t.className = 'legend';
+  app.appendChild(t);
+}
+
+function renderAll(data) {
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+  renderHeader();
+  renderLegend();
+
+  const { stats, repairs } = calcTeamStats(data);
+  const list = calcRankings(stats);
+
+  app.appendChild(h('h2', {}, '📊 消耗统计汇总'));
+  app.appendChild(makeTable(
+    ['班组', '蒸汽用量', '糖浆加量', '水量', '电量', '水分扣分'],
+    list.map(([t, s]) => [t, formatNum(s.蒸汽), formatNum(s.糖浆), formatNum(s.水), formatNum(s.电), String(s.扣分)])
+  ));
+
+  app.appendChild(h('h2', {}, '📈 平均分'));
+  app.appendChild(makeTable(
+    ['班组', '蒸汽÷糖浆', '水量÷正常班', '电量÷正常班', '工艺分'],
+    list.map(([t, s]) => [t, formatNum(s.比), formatNum(s.水均), formatNum(s.电均), formatNum(s.工艺分)])
+  ));
+
+  app.appendChild(h('h2', {}, '🏆 积分排名'));
+  app.appendChild(makeTable(
+    ['班组', '蒸汽÷糖浆排名', '水消耗排名', '电消耗排名', '各班积分', '最低消耗排名'],
+    list.map(([t, s]) => [t, String(s.排名比), String(s.排名水), String(s.排名电), String(s.积分), String(s.总排名)])
+  ));
+
+  if (repairs.length) {
+    app.appendChild(h('h2', {}, '🔧 检维修记录'));
+    app.appendChild(makeTable(['班组', '日期'], repairs.map(r => [r.班组, r.日期])));
+  }
+
+  app.appendChild(h('h2', {}, '📋 各班明细'));
+  for (const team of REPORT_CONFIG.teams) {
+    const s = stats[team]; if (!s) continue;
+    app.appendChild(h('h3', {}, `${team}（${s.班数 + s.检维修数}）`));
+    const rows = s.明细.map(d => [d.日期, d.类型, d.蒸汽, d.糖浆, d.水, d.电, d.水分]);
+    rows.push(['小计', `${IC.normal}:${s.班数} | ${IC.repair}:${s.检维修数}`,
+      formatNum(s.蒸汽), formatNum(s.糖浆), formatNum(s.水), formatNum(s.电), String(s.扣分)]);
+    app.appendChild(makeTable(['日期', '类型', '蒸汽消耗', '糖浆加量', '水消耗', '电消耗', '水分'], rows));
+  }
+}
+
+/* ============================================================
+ *  密码 & 启动
+ * ============================================================ */
+(function gate() {
+  const pw = REPORT_CONFIG.password;
+  if (!pw || !pw.enabled) return;
+  let attempts = 0, max = 3;
+  while (attempts < max) {
+    const input = prompt('请输入密码：', '');
+    if (!input) { window.location.replace(pw.failRedirect); return; }
+    if (pw.accept.includes(input)) return;
+    attempts++;
+    alert(`密码错误，还有 ${max - attempts} 次机会`);
+  }
+  window.location.replace(pw.failRedirect);
+})();
+
+if (typeof PRODUCTION_DATA === 'undefined') {
+  document.getElementById('app').textContent = '❌ data.js 未加载或格式错误，请打开 F12 控制台查看报错。';
+} else {
+  renderAll(PRODUCTION_DATA);
+}
+</script>
+</body>
+</html>
