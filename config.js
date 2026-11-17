@@ -1,9 +1,9 @@
 /* ============================================================
- *  config.js —— 报表配置（外观、名单、判定标准）
+ *  config.js —— 报表配置（外观、名单、判定标准、密码）
  * ============================================================
  *
  *  和 data.js 的分工：
- *    config.js 管"怎么算、怎么显示"：标题、导航、班组名单、水分标准、图标
+ *    config.js 管"怎么算、怎么显示"：标题、导航、班组名单、水分标准、图标、密码
  *    data.js   管"数据本身"：      每天的消耗记录
  *  两个文件互不干扰，各改各的。
  *
@@ -50,12 +50,26 @@ const REPORT_CONFIG = {
     waterNone: '🈚️',
   },
 
-  /* 前端密码（仅心理门槛，源码可见，防不住懂技术的人）
-   *   enabled: true 时打开页面先弹密码框，取消或连错3次跳 failRedirect
+  /* ── 前端密码（仅心理门槛，源码可见，防不住懂技术的人） ──
+   *
+   *   enabled      : true 才启用密码层，false 完全不弹窗
+   *   accept       : 密码数组，任意一个都通过（区分大小写）
+   *   maxAttempts  : 最多尝试次数，用完跳 failRedirect
+   *   promptText   : 弹窗里的提示文字
+   *   failRedirect : 取消输入或次数用完时跳转的地址
+   *   messages     : 各种弹窗文案，{remain} 会自动替换成剩余次数
    */
   password: {
     enabled: false,
     accept: ['biang', 'ㄅㄧㄤ', '𰻝', '𰻞'],
+    maxAttempts: 3,
+    promptText: '請輸入biangbiang麵的biang字：',
     failRedirect: 'https://zuqiuxiaojiang.github.io',
+    messages: {
+      correct:   '密码正确！',
+      wrong:     '密码错误！您还有 {remain} 次机会',
+      cancelled: '您取消了操作，页面将返回上一页',
+      exhausted: '您已用完所有尝试机会，页面将返回上一页',
+    },
   },
 };

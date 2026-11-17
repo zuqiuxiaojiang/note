@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>生产报表</title>
+
+<!-- 禁止浏览器缓存，改了 data.js 刷新立即生效 -->
+<meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="pragma" content="no-cache">
+<meta http-equiv="expires" content="0">
+
 <!-- 顺序不能变：先 CSS，再 config，再 data -->
 <link rel="stylesheet" href="styles.css">
 <script src="config.js"></script>
@@ -18,21 +24,65 @@
  * ============================================================
  *
  *  【一般不用改这个文件】
- *  数据在 data.js，外观在 styles.css，名单/标准在 config.js。
+ *  数据在 data.js，外观在 styles.css，名单/标准/密码在 config.js。
  *
  *  这里的代码做了这几件事：
- *    1. 清洗字段（数字带引号、空格、单位都能识别；null/undefined 视为空）
- *    2. 按 config.js 的 waterStandard 判定水分合格与否、扣几分
- *    3. 按班组汇总 蒸汽/糖浆/水/电、正常班数、检修数、合格数、工艺分
- *    4. 算排名（蒸汽÷糖浆、水均、电均）、积分、总排名
- *    5. 渲染成 5 张表：图例 / 汇总 / 平均 / 排名 / 明细
+ *    1. 密码验证（config.js 里 password.enabled = true 时才启用）
+ *    2. 清洗字段（数字带引号、空格、单位都能识别；null/undefined 视为空）
+ *    3. 按 config.js 的 waterStandard 判定水分合格与否、扣几分
+ *    4. 按班组汇总 蒸汽/糖浆/水/电、正常班数、检修数、合格数、工艺分
+ *    5. 算排名（蒸汽÷糖浆、水均、电均）、积分、总排名
+ *    6. 渲染成 5 张表：图例 / 汇总 / 平均 / 排名 / 明细
  *
  *  【为什么省略字段也能跑】
  *  所有字段读取都经过 cleanNumber，它把 undefined 和 null 一视同仁
  *  地归为"空值"，后续逻辑统一按空值处理 —— 所以 data.js 里不写字段
  *  和写 null 完全等价，代码无需改动。
  *
- *  【想改算法时才动这里】改完逻辑，data.js / config.js / styles.css 不用碰。
+ *  【想改算法时才动这里】改完逻辑，其余三个文件不用碰。
+ * ============================================================ */
+
+/* ============================================================
+ *  第一部分：密码验证（最先执行，不通过就直接跳走）
+ *  行为与原 build.py 里的 password_gate 完全一致：
+ *    · 输空 / 点取消       → 提示后跳转
+ *    · 密码正确            → 提示后放行
+ *    · 密码错误            → 提示剩几次
+ *    · 次数用完            → 提示后跳转
+ * ============================================================ */
+(function gate() {
+  const pw = REPORT_CONFIG.password;
+  if (!pw || !pw.enabled) return;
+
+  const max = pw.maxAttempts || 3;
+  let attempts = 0;
+
+  while (attempts < max) {
+    const input = prompt(pw.promptText || '请输入密码：', '');
+
+    // 原逻辑：null(取消) 和 ''(输空直接确定) 都算取消
+    if (!input) {
+      alert(pw.messages.cancelled);
+      window.location.replace(pw.failRedirect);
+      return;
+    }
+
+    if (pw.accept.includes(input)) {
+      alert(pw.messages.correct);
+      return;
+    }
+
+    attempts++;
+    const remain = max - attempts;
+    alert(pw.messages.wrong.replace('{remain}', remain));
+  }
+
+  alert(pw.messages.exhausted);
+  window.location.replace(pw.failRedirect);
+})();
+
+/* ============================================================
+ *  第二部分：工具函数
  * ============================================================ */
 
 // ── 数字清洗：把各种脏数据统一成 number 或 null ──
@@ -59,7 +109,9 @@ function formatNum(v) {
   return n.toFixed(4).replace(/\.?0+$/, '');
 }
 
-// ── 水分判定（标准来自 config.js） ──
+/* ============================================================
+ *  第三部分：水分判定
+ * ============================================================ */
 const IC = REPORT_CONFIG.icons;
 function getWaterStatus(val) {
   const use123 = REPORT_CONFIG.waterStandard === 1
@@ -83,7 +135,11 @@ function calcWaterScore(m) {
   return getWaterStatus(v)[1];
 }
 
-// ── 密集排名：相同数值同名次，不跳号 ──
+/* ============================================================
+ *  第四部分：排名算法
+ * ============================================================ */
+
+// 密集排名：相同数值同名次，不跳号
 function rank(list, key, asc = true) {
   const nums = list.filter(x => typeof x[1][key] === 'number').map(x => x[1][key]);
   const uniq = [...new Set(nums)].sort((a, b) => asc ? a - b : b - a);
@@ -92,7 +148,9 @@ function rank(list, key, asc = true) {
   return map;
 }
 
-// ── 按班组统计 ──
+/* ============================================================
+ *  第五部分：班组统计
+ * ============================================================ */
 function calcTeamStats(data) {
   const stats = {}, repairs = [];
   for (const team of REPORT_CONFIG.teams) {
@@ -163,7 +221,7 @@ function calcRankings(stats) {
 }
 
 /* ============================================================
- *  渲染（下面的代码一般不用看）
+ *  第六部分：渲染（下面的代码一般不用看）
  * ============================================================ */
 const h = (tag, attrs = {}, children = []) => {
   const el = document.createElement(tag);
@@ -251,22 +309,8 @@ function renderAll(data) {
 }
 
 /* ============================================================
- *  密码 & 启动
+ *  第七部分：启动
  * ============================================================ */
-(function gate() {
-  const pw = REPORT_CONFIG.password;
-  if (!pw || !pw.enabled) return;
-  let attempts = 0, max = 3;
-  while (attempts < max) {
-    const input = prompt('请输入密码：', '');
-    if (!input) { window.location.replace(pw.failRedirect); return; }
-    if (pw.accept.includes(input)) return;
-    attempts++;
-    alert(`密码错误，还有 ${max - attempts} 次机会`);
-  }
-  window.location.replace(pw.failRedirect);
-})();
-
 if (typeof PRODUCTION_DATA === 'undefined') {
   document.getElementById('app').textContent = '❌ data.js 未加载或格式错误，请打开 F12 控制台查看报错。';
 } else {
