@@ -60,7 +60,7 @@ const REPORT_CONFIG = {
    *   messages     : 各种弹窗文案，{remain} 会自动替换成剩余次数
    */
   password: {
-    enabled: false,
+    enabled: true,
     accept: ['biang', 'ㄅㄧㄤ', '𰻝', '𰻞'],
     maxAttempts: 3,
     promptText: '請輸入biangbiang麵的biang字：',
