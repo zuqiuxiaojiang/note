@@ -1,13 +1,10 @@
 /* ============================================================
  *  styles.css —— 样式总表（改外观只改这个文件）
  * ============================================================
- *
  *  分三大块：
- *    ① 通用样式（原文件已有，body/h1~h6/a/table/img/播放器/响应式）
- *    ② 报表专用样式（文件末尾，图例/居中表格/头图行内对齐）
- *    ③ 密码模态框样式（文件最末尾）
- *
- *  想调外观改这里，不用动 index.html。
+ *    ① 通用样式
+ *    ② 报表专用样式
+ *    ③ 密码模态框样式（含"显示/隐藏"眼睛按钮）
  * ============================================================ */
 
 /* ───────────── ① 通用样式 ───────────── */
@@ -17,7 +14,6 @@ body {
   margin: 10px;
 }
 
-/* 页面头部样式 */
 .header {
   display: flex;
   align-items: center;
@@ -66,7 +62,6 @@ img {
   height: auto;
 }
 
-/* 音频播放器 */
 .audio-player {
   width: 100%;
   max-width: 500px;
@@ -75,19 +70,10 @@ img {
   border: 1px solid #ccc;
   padding: 10px;
 }
-.audio-player button {
-  background: none;
-  border: none;
-  cursor: pointer;
-}
-.audio-player:hover {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-.audio-player button:hover {
-  background: #ddd;
-}
+.audio-player button { background: none; border: none; cursor: pointer; }
+.audio-player:hover { box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
+.audio-player button:hover { background: #ddd; }
 
-/* 视频播放器 */
 .video-player {
   position: relative;
   width: 100%;
@@ -95,50 +81,26 @@ img {
   margin: 0 auto;
   overflow: hidden;
 }
-.video-player video {
-  width: 100%;
-  height: auto;
-}
+.video-player video { width: 100%; height: auto; }
 
-/* 图标与标题同行 */
-.inline-image {
-  display: inline-block;
-  height: 45px;
-  vertical-align: middle;
-}
-.inline-title {
-  display: inline-block;
-  vertical-align: middle;
-}
+.inline-image { display: inline-block; height: 45px; vertical-align: middle; }
+.inline-title { display: inline-block; vertical-align: middle; }
 
-/* 响应式 */
 @media (max-width: 600px) {
   .audio-player { width: 90%; }
-  table {
-    display: block;
-    overflow-x: auto;
-    white-space: nowrap;
-  }
+  table { display: block; overflow-x: auto; white-space: nowrap; }
 }
 @media (max-width: 768px) {
   img { border-radius: 5px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); }
   .video-player { max-width: 100%; }
 }
-@media (min-width: 768px) and (max-width: 991px) {
-  .container { padding: 30px; }
-}
-@media (min-width: 992px) {
-  .container { padding: 40px; }
-}
+@media (min-width: 768px) and (max-width: 991px) { .container { padding: 30px; } }
+@media (min-width: 992px) { .container { padding: 40px; } }
 
-.options {
-  list-style: none;
-  padding: 0;
-}
+.options { list-style: none; padding: 0; }
 
 /* ───────────── ② 报表专用样式 ───────────── */
 
-/* 主容器：限制最大宽度、居中 */
 #app {
   max-width: 1000px;
   margin: 0 auto;
@@ -147,7 +109,6 @@ img {
   line-height: 1.5;
 }
 
-/* 头图 + 标题行 */
 #app h1 {
   display: flex;
   align-items: center;
@@ -155,7 +116,6 @@ img {
   font-size: 22px;
 }
 
-/* 导航链接行（h3 里排一排） */
 #app h3 {
   display: flex;
   flex-wrap: wrap;
@@ -163,32 +123,18 @@ img {
   font-weight: normal;
 }
 
-/* 每张表的章节标题：左侧竖条，显眼 */
 #app h2 {
   margin-top: 28px;
   padding-left: 10px;
   border-left: 4px solid #3b82f6;
 }
 
-/* 报表表格：居中 + 表头灰底（覆盖通用样式里的 left 对齐） */
-#app table {
-  margin: 10px 0;
-}
-#app th,
-#app td {
-  text-align: center;
-  padding: 5px 10px;
-}
-#app th {
-  background: #f4f4f4;
-}
+#app table { margin: 10px 0; }
+#app th, #app td { text-align: center; padding: 5px 10px; }
+#app th { background: #f4f4f4; }
 
-/* 图例第一列（emoji）放大一点 */
-#app .legend td:first-child {
-  font-size: 20px;
-}
+#app .legend td:first-child { font-size: 20px; }
 
-/* 深色模式（系统偏好自动切换） */
 @media (prefers-color-scheme: dark) {
   body { background: #181a1b; color: #e8e6e3; }
   #app th { background: #2a2d2f; }
@@ -198,7 +144,6 @@ img {
 
 /* ───────────── ③ 密码模态框 ───────────── */
 
-/* 遮罩层：铺满屏幕、半透明、居中卡片、淡入 */
 .pw-overlay {
   position: fixed;
   inset: 0;
@@ -211,12 +156,8 @@ img {
   -webkit-backdrop-filter: blur(6px);
   animation: pw-fade-in 0.25s ease;
 }
-@keyframes pw-fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
+@keyframes pw-fade-in { from { opacity: 0; } to { opacity: 1; } }
 
-/* 卡片主体 */
 .pw-card {
   width: min(92vw, 380px);
   background: #fff;
@@ -232,14 +173,12 @@ img {
   to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
-/* 锁图标 */
 .pw-icon {
   font-size: 42px;
   line-height: 1;
   margin-bottom: 12px;
 }
 
-/* 标题 */
 .pw-title {
   font-size: 20px;
   font-weight: 600;
@@ -247,7 +186,6 @@ img {
   margin: 0 0 8px;
 }
 
-/* 提示文字 */
 .pw-hint {
   font-size: 14px;
   color: #6b7280;
@@ -255,11 +193,16 @@ img {
   line-height: 1.5;
 }
 
-/* 输入框 */
+/* 输入框容器（定位眼睛按钮用） */
+.pw-input-wrap {
+  position: relative;
+  width: 100%;
+}
+
 .pw-input {
   width: 100%;
   box-sizing: border-box;
-  padding: 12px 14px;
+  padding: 12px 46px 12px 14px;   /* 右侧留出眼睛按钮的空间 */
   font-size: 16px;
   border: 2px solid #e5e7eb;
   border-radius: 10px;
@@ -274,7 +217,6 @@ img {
   box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
 }
 
-/* 错误时输入框变红 + 抖动 */
 .pw-input.error {
   border-color: #ef4444;
   background: #fef2f2;
@@ -288,7 +230,31 @@ img {
   80%      { transform: translateX(6px); }
 }
 
-/* 错误/状态提示行 */
+/* 眼睛按钮：贴在输入框右侧内部 */
+.pw-eye {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 17px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  transition: background 0.15s, color 0.15s;
+  user-select: none;
+}
+.pw-eye:hover { background: #f3f4f6; color: #1f2937; }
+.pw-eye:active { background: #e5e7eb; }
+
 .pw-message {
   min-height: 20px;
   margin: 10px 0 4px;
@@ -299,7 +265,6 @@ img {
 .pw-message.info  { color: #6b7280; }
 .pw-message.error { color: #ef4444; }
 
-/* 按钮组 */
 .pw-actions {
   display: flex;
   gap: 10px;
@@ -318,7 +283,6 @@ img {
   font-family: inherit;
 }
 
-/* 主按钮（进入） */
 .pw-btn-primary {
   background: #3b82f6;
   color: #fff;
@@ -327,16 +291,12 @@ img {
 .pw-btn-primary:active { transform: scale(0.97); }
 .pw-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* 次按钮（返回） */
 .pw-btn-ghost {
   background: transparent;
   color: #6b7280;
   border-color: #e5e7eb;
 }
-.pw-btn-ghost:hover {
-  background: #f3f4f6;
-  color: #1f2937;
-}
+.pw-btn-ghost:hover { background: #f3f4f6; color: #1f2937; }
 
 /* 深色模式 */
 @media (prefers-color-scheme: dark) {
@@ -357,12 +317,14 @@ img {
     box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.2);
   }
   .pw-input.error { background: #3f1d1d; border-color: #f87171; }
+  .pw-eye  { color: #9ca3af; }
+  .pw-eye:hover  { background: #374151; color: #f3f4f6; }
+  .pw-eye:active { background: #4b5563; }
   .pw-message.info { color: #9ca3af; }
   .pw-btn-ghost  { color: #9ca3af; border-color: #374151; }
   .pw-btn-ghost:hover { background: #374151; color: #f3f4f6; }
 }
 
-/* 移动端：卡片贴边、按钮竖排 */
 @media (max-width: 480px) {
   .pw-card { padding: 26px 22px 20px; border-radius: 14px; }
   .pw-icon { font-size: 36px; }

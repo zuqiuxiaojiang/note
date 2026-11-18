@@ -26,28 +26,18 @@
  *  【一般不用改这个文件】
  *  数据在 data.js，外观在 styles.css，名单/标准/密码在 config.js。
  *
- *  这里的代码分七部分：
- *    1. 密码验证（异步模态框，config.js 里 enabled = true 才启用）
- *    2. 工具函数（数字清洗 / 格式化）
+ *  七部分：
+ *    1. 密码验证（异步模态框，带"显示/隐藏"眼睛按钮）
+ *    2. 工具函数
  *    3. 水分判定
  *    4. 排名算法
  *    5. 班组统计
  *    6. 渲染
- *    7. 启动（先验证密码，通过后才渲染）
- *
- *  【为什么省略字段也能跑】
- *  所有字段读取都经过 cleanNumber，它把 undefined 和 null 一视同仁
- *  地归为"空值"，后续逻辑统一按空值处理 —— 所以 data.js 里不写字段
- *  和写 null 完全等价，代码无需改动。
- *
- *  【想改算法时才动这里】改完逻辑，其余三个文件不用碰。
+ *    7. 启动
  * ============================================================ */
 
 /* ============================================================
- *  第一部分：密码验证（异步模态框）
- *  · 未启用 → 立即 resolve
- *  · 通过   → resolve，继续渲染
- *  · 取消 / 次数用完 → 淡出后跳转 failRedirect（不 resolve）
+ *  第一部分：密码验证
  * ============================================================ */
 function showPasswordGate() {
   return new Promise((resolve) => {
@@ -58,6 +48,9 @@ function showPasswordGate() {
     const max = pw.maxAttempts || 3;
     let attempts = 0;
 
+    // 是否显示眼睛按钮（showToggle 默认 true）
+    const showToggle = pw.showToggle !== false;
+
     // ── 构建 DOM ──
     const overlay = document.createElement('div');
     overlay.className = 'pw-overlay';
@@ -66,8 +59,12 @@ function showPasswordGate() {
         <div class="pw-icon">🔒</div>
         <h2 class="pw-title" id="pw-title">${ui.title}</h2>
         <p class="pw-hint">${ui.hint}</p>
-        <input class="pw-input" type="password" placeholder="${ui.placeholder}"
-               autocomplete="off" spellcheck="false">
+        <div class="pw-input-wrap">
+          <input class="pw-input" type="password" placeholder="${ui.placeholder}"
+                 autocomplete="off" spellcheck="false">
+          ${showToggle ? `<button class="pw-eye" type="button"
+                 title="${ui.showPassword}" aria-label="${ui.showPassword}">👁</button>` : ''}
+        </div>
         <div class="pw-message info">${ui.attemptsText.replace('{remain}', max)}</div>
         <div class="pw-actions">
           <button class="pw-btn pw-btn-ghost" type="button">${ui.cancel}</button>
@@ -81,9 +78,36 @@ function showPasswordGate() {
     const message = overlay.querySelector('.pw-message');
     const btnOk   = overlay.querySelector('.pw-btn-primary');
     const btnBack = overlay.querySelector('.pw-btn-ghost');
+    const eyeBtn  = overlay.querySelector('.pw-eye');   // 可能为 null
+
+    // 预填（后门关键）
+    if (pw.prefill) input.value = pw.prefill;
 
     // 自动聚焦
-    setTimeout(() => input.focus(), 50);
+    setTimeout(() => {
+      input.focus();
+      if (pw.prefill) input.select();
+    }, 50);
+
+    // ── 眼睛按钮：点击切换 password / text ──
+    if (eyeBtn) {
+      // mousedown 时 preventDefault，避免输入框失焦（移动端软键盘不会收起）
+      eyeBtn.addEventListener('mousedown', (e) => e.preventDefault());
+      eyeBtn.addEventListener('click', () => {
+        const isHidden = input.type === 'password';
+        input.type = isHidden ? 'text' : 'password';
+        eyeBtn.textContent = isHidden ? '🙈' : '👁';
+        const label = isHidden ? ui.hidePassword : ui.showPassword;
+        eyeBtn.title = label;
+        eyeBtn.setAttribute('aria-label', label);
+        input.focus();
+        // 光标移到末尾
+        try {
+          const len = input.value.length;
+          input.setSelectionRange(len, len);
+        } catch (e) {}
+      });
+    }
 
     // ── 工具函数 ──
     function setMessage(text, type = 'info') {
@@ -92,7 +116,7 @@ function showPasswordGate() {
     }
     function shake() {
       input.classList.remove('error');
-      void input.offsetWidth;  // 强制重排，让抖动动画能重播
+      void input.offsetWidth;
       input.classList.add('error');
       setTimeout(() => input.classList.remove('error'), 500);
     }
@@ -105,14 +129,15 @@ function showPasswordGate() {
     // ── 提交 ──
     function submit() {
       const val = input.value;
+      const allowEmpty = pw.accept.includes('');
 
-      if (!val) {
+      if (!val && !allowEmpty) {
         setMessage(ui.errorEmpty, 'error');
         shake();
         return;
       }
+
       if (pw.accept.includes(val)) {
-        // 成功：淡出后 resolve，继续渲染
         overlay.style.transition = 'opacity 0.2s';
         overlay.style.opacity = '0';
         setTimeout(() => {
@@ -133,6 +158,7 @@ function showPasswordGate() {
         shake();
         input.disabled = true;
         btnOk.disabled = true;
+        if (eyeBtn) eyeBtn.disabled = true;
         setTimeout(fadeOutAndRedirect, 1200);
         return;
       }
@@ -143,15 +169,17 @@ function showPasswordGate() {
 
     // ── 事件绑定 ──
     btnOk.addEventListener('click', submit);
+
     btnBack.addEventListener('click', () => {
       setMessage(ui.cancelled, 'error');
       setTimeout(fadeOutAndRedirect, 400);
     });
+
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') { e.preventDefault(); submit(); }
       else if (e.key === 'Escape') { e.preventDefault(); btnBack.click(); }
     });
-    // 点遮罩空白处 = 取消
+
     overlay.addEventListener('click', (e) => {
       if (e.target === overlay) btnBack.click();
     });
@@ -161,10 +189,8 @@ function showPasswordGate() {
 /* ============================================================
  *  第二部分：工具函数
  * ============================================================ */
-
-// ── 数字清洗：把各种脏数据统一成 number 或 null ──
 function cleanNumber(v) {
-  if (v === undefined || v === null) return null;   // ← 省略 = null
+  if (v === undefined || v === null) return null;
   if (typeof v === 'number') return isNaN(v) ? null : v;
   if (typeof v !== 'string') return null;
   const s = v.trim().replace(/^["'‘’"“”]+|["'‘’"“”]+$/g, '').replace(/[,，]/g, '');
@@ -172,13 +198,9 @@ function cleanNumber(v) {
   return m ? parseFloat(m[0]) : null;
 }
 function safeNum(p, k) { const v = cleanNumber(p[k]); return v !== null ? v : 0; }
-
-// ── 是否有任意消耗数据（决定是否算"正常班"） ──
 function hasAnyData(p) {
   return ['蒸汽消耗', '糖浆加量', '水消耗', '电消耗'].some(k => cleanNumber(p[k]) !== null);
 }
-
-// ── 格式化数字：最多4位小数，去掉末尾0 ──
 function formatNum(v) {
   if (v === undefined || v === null || v === '' || v === '-') return '-';
   const n = parseFloat(v);
@@ -202,21 +224,19 @@ function getWaterStatus(val) {
 }
 function formatWater(m) {
   const v = cleanNumber(m);
-  if (v === null) return IC.waterOk;    // 未填写 = 默认合格
-  if (v === 0) return IC.waterNone;     // 填 0 = 无料样
+  if (v === null) return IC.waterOk;
+  if (v === 0) return IC.waterNone;
   return getWaterStatus(v)[0];
 }
 function calcWaterScore(m) {
   const v = cleanNumber(m);
-  if (v === null || v === 0) return 0;  // 未填写或无料样都不扣分
+  if (v === null || v === 0) return 0;
   return getWaterStatus(v)[1];
 }
 
 /* ============================================================
  *  第四部分：排名算法
  * ============================================================ */
-
-// 密集排名：相同数值同名次，不跳号
 function rank(list, key, asc = true) {
   const nums = list.filter(x => typeof x[1][key] === 'number').map(x => x[1][key]);
   const uniq = [...new Set(nums)].sort((a, b) => asc ? a - b : b - a);
@@ -257,7 +277,6 @@ function calcTeamStats(data) {
 
       const s = calcWaterScore(p.水分);
       扣分 += s;
-      // 合格班：有数据 + 水分不扣分 + 水分不是"无料样(0)"
       if (hasData && s === 0 && cleanNumber(p.水分) !== 0) 合格数++;
 
       明细.push(isRepair
@@ -280,7 +299,6 @@ function calcTeamStats(data) {
   return { stats, repairs };
 }
 
-// ── 排名 + 积分 + 总排名 ──
 function calcRankings(stats) {
   const list = REPORT_CONFIG.teams.map(t => [t, stats[t]]).filter(x => x[1]);
   const rB = rank(list, '比'), rW = rank(list, '水均'), rE = rank(list, '电均');
@@ -386,7 +404,7 @@ function renderAll(data) {
 }
 
 /* ============================================================
- *  第七部分：启动（先验证密码，通过后才渲染）
+ *  第七部分：启动
  * ============================================================ */
 showPasswordGate().then(() => {
   if (typeof PRODUCTION_DATA === 'undefined') {

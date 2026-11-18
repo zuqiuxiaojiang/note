@@ -15,7 +15,8 @@
  *    · 换图标 emoji  → REPORT_CONFIG.icons
  *    · 开关密码      → REPORT_CONFIG.password.enabled
  *    · 改密码文案    → REPORT_CONFIG.password.ui
- *  ============================================================ */
+ *    · 密码后门      → REPORT_CONFIG.password.accept / prefill
+ * ============================================================ */
 
 const REPORT_CONFIG = {
   title: '天使之翼',
@@ -28,20 +29,10 @@ const REPORT_CONFIG = {
     { text: 'NOTE', url: 'https://zuqiuxiaojiang.github.io/note' },
   ],
 
-  /* 班组名单：data.js 里的"班组"字段必须在此列表内，否则该记录被忽略 */
   teams: ['甲班', '乙班', '丙班', '丁班'],
-
-  /* 工艺分基数（满分） */
   processBaseScore: 40,
-
-  /* 水分标准：
-   *   0 = 自动判断（≤5 用 123 标准，>5 用考核标准）
-   *   1 = 强制 123 标准（=2 合格，<2 扣5分，>2 扣10分）
-   *   2 = 强制考核标准（10.5~11.5 合格，<10.5 扣5分，>11.5 扣10分）
-   */
   waterStandard: 0,
 
-  /* 图例 emoji（改图标只改这里，data.js 不用动） */
   icons: {
     normal:    '✅',
     repair:    '🛠',
@@ -53,18 +44,25 @@ const REPORT_CONFIG = {
 
   /* ── 前端密码（仅心理门槛，源码可见，防不住懂技术的人） ──
    *
-   *   enabled      : true 才启用密码层，false 完全不弹窗直接显示
+   *   enabled      : true 才启用，false 完全不弹窗直接显示
    *   accept       : 密码数组，任意一个都通过（区分大小写）
+   *   prefill      : 输入框打开时预填的值
    *   maxAttempts  : 最多尝试次数，用完跳 failRedirect
    *   failRedirect : 取消或次数用完时跳转的地址
+   *   showToggle   : true 显示输入框右侧的"👁 显示/隐藏"按钮
    *
-   *   界面文案都在这里，想改提示语只改这个段。
+   *   ★ 三种后门玩法 ★
+   *   【A】必须输密码：accept 里不放 ''，prefill 留 ''
+   *   【B】直接点进入就过：accept 里加 ''，prefill 留 ''
+   *   【C】隐形字符：accept / prefill 都填 '\uE000'
    */
   password: {
     enabled: true,
-    accept: ['biang', 'ㄅㄧㄤ', '𰻝', '𰻞',""],
+    accept: ['biang', 'ㄅㄧㄤ', '𰻝', '𰻞',"\uE039"],
+    prefill: '\uE039',
     maxAttempts: 3,
     failRedirect: 'https://zuqiuxiaojiang.github.io',
+    showToggle: true,   // ← 眼睛按钮开关
 
     /* 界面文案 */
     ui: {
@@ -78,6 +76,8 @@ const REPORT_CONFIG = {
       errorWrong: '密码错误',
       errorExhausted: '尝试次数已用完，即将返回首页…',
       cancelled: '已取消，即将返回…',
+      showPassword: '显示密码',
+      hidePassword: '隐藏密码',
     },
   },
 };
