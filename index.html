@@ -20,19 +20,20 @@
 
 <script>
 /* ============================================================
- *  index.html —— 业务逻辑（统计 / 排名 / 渲染）
+ *  index.html —— 业务逻辑（密码 / 统计 / 排名 / 渲染）
  * ============================================================
  *
  *  【一般不用改这个文件】
  *  数据在 data.js，外观在 styles.css，名单/标准/密码在 config.js。
  *
- *  这里的代码做了这几件事：
- *    1. 密码验证（config.js 里 password.enabled = true 时才启用）
- *    2. 清洗字段（数字带引号、空格、单位都能识别；null/undefined 视为空）
- *    3. 按 config.js 的 waterStandard 判定水分合格与否、扣几分
- *    4. 按班组汇总 蒸汽/糖浆/水/电、正常班数、检修数、合格数、工艺分
- *    5. 算排名（蒸汽÷糖浆、水均、电均）、积分、总排名
- *    6. 渲染成 5 张表：图例 / 汇总 / 平均 / 排名 / 明细
+ *  这里的代码分七部分：
+ *    1. 密码验证（异步模态框，config.js 里 enabled = true 才启用）
+ *    2. 工具函数（数字清洗 / 格式化）
+ *    3. 水分判定
+ *    4. 排名算法
+ *    5. 班组统计
+ *    6. 渲染
+ *    7. 启动（先验证密码，通过后才渲染）
  *
  *  【为什么省略字段也能跑】
  *  所有字段读取都经过 cleanNumber，它把 undefined 和 null 一视同仁
@@ -43,43 +44,119 @@
  * ============================================================ */
 
 /* ============================================================
- *  第一部分：密码验证（最先执行，不通过就直接跳走）
- *  行为与原 build.py 里的 password_gate 完全一致：
- *    · 输空 / 点取消       → 提示后跳转
- *    · 密码正确            → 提示后放行
- *    · 密码错误            → 提示剩几次
- *    · 次数用完            → 提示后跳转
+ *  第一部分：密码验证（异步模态框）
+ *  · 未启用 → 立即 resolve
+ *  · 通过   → resolve，继续渲染
+ *  · 取消 / 次数用完 → 淡出后跳转 failRedirect（不 resolve）
  * ============================================================ */
-(function gate() {
-  const pw = REPORT_CONFIG.password;
-  if (!pw || !pw.enabled) return;
+function showPasswordGate() {
+  return new Promise((resolve) => {
+    const pw = REPORT_CONFIG.password;
+    if (!pw || !pw.enabled) { resolve(); return; }
 
-  const max = pw.maxAttempts || 3;
-  let attempts = 0;
+    const ui = pw.ui;
+    const max = pw.maxAttempts || 3;
+    let attempts = 0;
 
-  while (attempts < max) {
-    const input = prompt(pw.promptText || '请输入密码：', '');
+    // ── 构建 DOM ──
+    const overlay = document.createElement('div');
+    overlay.className = 'pw-overlay';
+    overlay.innerHTML = `
+      <div class="pw-card" role="dialog" aria-modal="true" aria-labelledby="pw-title">
+        <div class="pw-icon">🔒</div>
+        <h2 class="pw-title" id="pw-title">${ui.title}</h2>
+        <p class="pw-hint">${ui.hint}</p>
+        <input class="pw-input" type="password" placeholder="${ui.placeholder}"
+               autocomplete="off" spellcheck="false">
+        <div class="pw-message info">${ui.attemptsText.replace('{remain}', max)}</div>
+        <div class="pw-actions">
+          <button class="pw-btn pw-btn-ghost" type="button">${ui.cancel}</button>
+          <button class="pw-btn pw-btn-primary" type="button">${ui.submit}</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
 
-    // 原逻辑：null(取消) 和 ''(输空直接确定) 都算取消
-    if (!input) {
-      alert(pw.messages.cancelled);
-      window.location.replace(pw.failRedirect);
-      return;
+    const input   = overlay.querySelector('.pw-input');
+    const message = overlay.querySelector('.pw-message');
+    const btnOk   = overlay.querySelector('.pw-btn-primary');
+    const btnBack = overlay.querySelector('.pw-btn-ghost');
+
+    // 自动聚焦
+    setTimeout(() => input.focus(), 50);
+
+    // ── 工具函数 ──
+    function setMessage(text, type = 'info') {
+      message.textContent = text;
+      message.className = 'pw-message ' + type;
+    }
+    function shake() {
+      input.classList.remove('error');
+      void input.offsetWidth;  // 强制重排，让抖动动画能重播
+      input.classList.add('error');
+      setTimeout(() => input.classList.remove('error'), 500);
+    }
+    function fadeOutAndRedirect() {
+      overlay.style.transition = 'opacity 0.2s';
+      overlay.style.opacity = '0';
+      setTimeout(() => { window.location.replace(pw.failRedirect); }, 200);
     }
 
-    if (pw.accept.includes(input)) {
-      alert(pw.messages.correct);
-      return;
+    // ── 提交 ──
+    function submit() {
+      const val = input.value;
+
+      if (!val) {
+        setMessage(ui.errorEmpty, 'error');
+        shake();
+        return;
+      }
+      if (pw.accept.includes(val)) {
+        // 成功：淡出后 resolve，继续渲染
+        overlay.style.transition = 'opacity 0.2s';
+        overlay.style.opacity = '0';
+        setTimeout(() => {
+          overlay.remove();
+          resolve();
+        }, 200);
+        return;
+      }
+
+      // 错误
+      attempts++;
+      const remain = max - attempts;
+      input.value = '';
+      input.focus();
+
+      if (remain <= 0) {
+        setMessage(ui.errorExhausted, 'error');
+        shake();
+        input.disabled = true;
+        btnOk.disabled = true;
+        setTimeout(fadeOutAndRedirect, 1200);
+        return;
+      }
+
+      setMessage(`${ui.errorWrong} · ${ui.attemptsText.replace('{remain}', remain)}`, 'error');
+      shake();
     }
 
-    attempts++;
-    const remain = max - attempts;
-    alert(pw.messages.wrong.replace('{remain}', remain));
-  }
-
-  alert(pw.messages.exhausted);
-  window.location.replace(pw.failRedirect);
-})();
+    // ── 事件绑定 ──
+    btnOk.addEventListener('click', submit);
+    btnBack.addEventListener('click', () => {
+      setMessage(ui.cancelled, 'error');
+      setTimeout(fadeOutAndRedirect, 400);
+    });
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); submit(); }
+      else if (e.key === 'Escape') { e.preventDefault(); btnBack.click(); }
+    });
+    // 点遮罩空白处 = 取消
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) btnBack.click();
+    });
+  });
+}
 
 /* ============================================================
  *  第二部分：工具函数
@@ -221,7 +298,7 @@ function calcRankings(stats) {
 }
 
 /* ============================================================
- *  第六部分：渲染（下面的代码一般不用看）
+ *  第六部分：渲染
  * ============================================================ */
 const h = (tag, attrs = {}, children = []) => {
   const el = document.createElement(tag);
@@ -309,13 +386,16 @@ function renderAll(data) {
 }
 
 /* ============================================================
- *  第七部分：启动
+ *  第七部分：启动（先验证密码，通过后才渲染）
  * ============================================================ */
-if (typeof PRODUCTION_DATA === 'undefined') {
-  document.getElementById('app').textContent = '❌ data.js 未加载或格式错误，请打开 F12 控制台查看报错。';
-} else {
-  renderAll(PRODUCTION_DATA);
-}
+showPasswordGate().then(() => {
+  if (typeof PRODUCTION_DATA === 'undefined') {
+    document.getElementById('app').textContent =
+      '❌ data.js 未加载或格式错误，请打开 F12 控制台查看报错。';
+  } else {
+    renderAll(PRODUCTION_DATA);
+  }
+});
 </script>
 </body>
 </html>

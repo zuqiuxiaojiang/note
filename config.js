@@ -14,6 +14,7 @@
  *    · 切水分标准    → REPORT_CONFIG.waterStandard（0自动 / 1 123标准 / 2 考核标准）
  *    · 换图标 emoji  → REPORT_CONFIG.icons
  *    · 开关密码      → REPORT_CONFIG.password.enabled
+ *    · 改密码文案    → REPORT_CONFIG.password.ui
  *  ============================================================ */
 
 const REPORT_CONFIG = {
@@ -52,24 +53,31 @@ const REPORT_CONFIG = {
 
   /* ── 前端密码（仅心理门槛，源码可见，防不住懂技术的人） ──
    *
-   *   enabled      : true 才启用密码层，false 完全不弹窗
+   *   enabled      : true 才启用密码层，false 完全不弹窗直接显示
    *   accept       : 密码数组，任意一个都通过（区分大小写）
    *   maxAttempts  : 最多尝试次数，用完跳 failRedirect
-   *   promptText   : 弹窗里的提示文字
-   *   failRedirect : 取消输入或次数用完时跳转的地址
-   *   messages     : 各种弹窗文案，{remain} 会自动替换成剩余次数
+   *   failRedirect : 取消或次数用完时跳转的地址
+   *
+   *   界面文案都在这里，想改提示语只改这个段。
    */
   password: {
     enabled: true,
-    accept: ['biang', 'ㄅㄧㄤ', '𰻝', '𰻞'],
+    accept: ['biang', 'ㄅㄧㄤ', '𰻝', '𰻞',""],
     maxAttempts: 3,
-    promptText: '請輸入biangbiang麵的biang字：',
     failRedirect: 'https://zuqiuxiaojiang.github.io',
-    messages: {
-      correct:   '密码正确！',
-      wrong:     '密码错误！您还有 {remain} 次机会',
-      cancelled: '您取消了操作，页面将返回上一页',
-      exhausted: '您已用完所有尝试机会，页面将返回上一页',
+
+    /* 界面文案 */
+    ui: {
+      title: '🔒 访问验证',
+      hint: '請輸入 biangbiang 麵的 biang 字',
+      placeholder: '在此输入密码…',
+      submit: '进入',
+      cancel: '返回首页',
+      attemptsText: '剩余 {remain} 次机会',
+      errorEmpty: '请输入密码',
+      errorWrong: '密码错误',
+      errorExhausted: '尝试次数已用完，即将返回首页…',
+      cancelled: '已取消，即将返回…',
     },
   },
 };

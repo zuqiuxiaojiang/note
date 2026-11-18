@@ -2,9 +2,10 @@
  *  styles.css —— 样式总表（改外观只改这个文件）
  * ============================================================
  *
- *  分两大块：
+ *  分三大块：
  *    ① 通用样式（原文件已有，body/h1~h6/a/table/img/播放器/响应式）
  *    ② 报表专用样式（文件末尾，图例/居中表格/头图行内对齐）
+ *    ③ 密码模态框样式（文件最末尾）
  *
  *  想调外观改这里，不用动 index.html。
  * ============================================================ */
@@ -193,4 +194,177 @@ img {
   #app th { background: #2a2d2f; }
   #app th, #app td { border-color: #3a3d3f; }
   a { color: #6aa9ff; }
+}
+
+/* ───────────── ③ 密码模态框 ───────────── */
+
+/* 遮罩层：铺满屏幕、半透明、居中卡片、淡入 */
+.pw-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: pw-fade-in 0.25s ease;
+}
+@keyframes pw-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* 卡片主体 */
+.pw-card {
+  width: min(92vw, 380px);
+  background: #fff;
+  border-radius: 16px;
+  padding: 32px 28px 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25), 0 4px 12px rgba(0, 0, 0, 0.08);
+  text-align: center;
+  font-family: system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  animation: pw-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes pw-pop {
+  from { opacity: 0; transform: scale(0.9) translateY(10px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* 锁图标 */
+.pw-icon {
+  font-size: 42px;
+  line-height: 1;
+  margin-bottom: 12px;
+}
+
+/* 标题 */
+.pw-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 8px;
+}
+
+/* 提示文字 */
+.pw-hint {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0 0 20px;
+  line-height: 1.5;
+}
+
+/* 输入框 */
+.pw-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  font-size: 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  background: #f9fafb;
+  color: #1f2937;
+}
+.pw-input:focus {
+  border-color: #3b82f6;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+}
+
+/* 错误时输入框变红 + 抖动 */
+.pw-input.error {
+  border-color: #ef4444;
+  background: #fef2f2;
+  animation: pw-shake 0.4s;
+}
+@keyframes pw-shake {
+  0%, 100% { transform: translateX(0); }
+  20%      { transform: translateX(-8px); }
+  40%      { transform: translateX(8px); }
+  60%      { transform: translateX(-6px); }
+  80%      { transform: translateX(6px); }
+}
+
+/* 错误/状态提示行 */
+.pw-message {
+  min-height: 20px;
+  margin: 10px 0 4px;
+  font-size: 13px;
+  color: #ef4444;
+  font-weight: 500;
+}
+.pw-message.info  { color: #6b7280; }
+.pw-message.error { color: #ef4444; }
+
+/* 按钮组 */
+.pw-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.pw-btn {
+  flex: 1;
+  padding: 11px 16px;
+  font-size: 15px;
+  font-weight: 500;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 2px solid transparent;
+  font-family: inherit;
+}
+
+/* 主按钮（进入） */
+.pw-btn-primary {
+  background: #3b82f6;
+  color: #fff;
+}
+.pw-btn-primary:hover  { background: #2563eb; }
+.pw-btn-primary:active { transform: scale(0.97); }
+.pw-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* 次按钮（返回） */
+.pw-btn-ghost {
+  background: transparent;
+  color: #6b7280;
+  border-color: #e5e7eb;
+}
+.pw-btn-ghost:hover {
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+/* 深色模式 */
+@media (prefers-color-scheme: dark) {
+  .pw-card {
+    background: #1f2937;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  }
+  .pw-title  { color: #f3f4f6; }
+  .pw-hint   { color: #9ca3af; }
+  .pw-input  {
+    background: #111827;
+    border-color: #374151;
+    color: #f3f4f6;
+  }
+  .pw-input:focus {
+    border-color: #60a5fa;
+    background: #111827;
+    box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.2);
+  }
+  .pw-input.error { background: #3f1d1d; border-color: #f87171; }
+  .pw-message.info { color: #9ca3af; }
+  .pw-btn-ghost  { color: #9ca3af; border-color: #374151; }
+  .pw-btn-ghost:hover { background: #374151; color: #f3f4f6; }
+}
+
+/* 移动端：卡片贴边、按钮竖排 */
+@media (max-width: 480px) {
+  .pw-card { padding: 26px 22px 20px; border-radius: 14px; }
+  .pw-icon { font-size: 36px; }
+  .pw-actions { flex-direction: column-reverse; }
 }

@@ -49,8 +49,4 @@ password();
 
 [主站](https://zuqiuxiaojiang.github.io) | [-站](https://zuqiuxiaojiang.github.io/-) | [_站](https://zuqiuxiaojiang.github.io/_)
 
-###### *📱🉑扫码下方并关注*
-
-| VX公众号 | QQ频道号 |
-| :---: | :---: |
-| <img src="./WX公众号.jpg" width="60"> | <img src="./QQ频道号.jpg" width="60"> |
+远程地址：https://gitee.com/用户名/仓库名.git
