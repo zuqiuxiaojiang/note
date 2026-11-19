@@ -51,7 +51,9 @@ password();
 
 # MGit使用方法
 ## 克隆仓库
-远程地址：https://gitee.com/用户名/仓库名.git
+远程地址：
+https://gitee.com/用户名/仓库名.git
+https://github.com/用户名/仓库名.git
 本地路径：仓库名
 ## Git设置
 用户名和邮箱
