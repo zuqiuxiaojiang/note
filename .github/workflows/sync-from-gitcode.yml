@@ -1,0 +1,26 @@
+name: sync-from-gitcode
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'   # 每 10 分钟跑一次
+  workflow_dispatch:         # 也支持手动触发（Actions 页面点 Run）
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout GitHub repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch from GitCode and push to GitHub
+        run: |
+          git remote add gitcode https://gitcode.com/zuqiuxiaojiang/note.git
+          git fetch gitcode '+refs/heads/*:refs/remotes/gitcode/*' --tags
+          # 强制把 GitCode 的所有分支推送到 GitHub（镜像语义）
+          git push origin '+refs/remotes/gitcode/*:refs/heads/*'
+          git push origin --tags --force
