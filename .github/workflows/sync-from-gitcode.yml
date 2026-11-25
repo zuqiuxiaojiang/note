@@ -2,7 +2,7 @@ name: sync-from-gitcode
 
 on:
   schedule:
-    - cron: '*/10 * * * *'   # 每 10 分钟跑一次
+    - cron: '*/5 * * * *'    # 每 5 分钟跑一次（GitHub 允许的最短间隔）
   workflow_dispatch:         # 也支持手动触发（Actions 页面点 Run）
 
 permissions:
