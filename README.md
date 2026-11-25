@@ -1,4 +1,3 @@
-
 <!-- 引入外部CSS文件 -->
 <link rel="stylesheet" href="styles.css">
 
@@ -47,10 +46,10 @@ password();
 
 ## 🚏🚶⛩️🏃：
 
-[主站](https://zuqiuxiaojiang.github.io) | [-站](https://zuqiuxiaojiang.github.io/-) | [_站](https://zuqiuxiaojiang.github.io/_)
+[首页](https://zuqiuxiaojiang.github.io) | [个人](https://zuqiuxiaojiang.github.io/-) | [工作](https://zuqiuxiaojiang.github.io/_) | [NOTE](https://zuqiuxiaojiang.github.io/note)
 
 # Git及相关
-## MGit
+## MGit使用方法
 ### 克隆仓库
 远程地址：
 https://gitee.com/用户名/仓库名.git | https://github.com/用户名/仓库名.git | https://gitcode.com/用户名/仓库名.git
