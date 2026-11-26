@@ -150,19 +150,13 @@ git checkout main       # 切换回主分支
 使用 Personal Access Token（PAT） 代替密码。在 GitHub 的 Settings → Developer settings → Personal access tokens 中生成 Token，勾选所需的 repo 权限。克隆或推送私有仓库时，在密码提示处粘贴该 Token 即可。
 
 #### SSH 方式（更稳定）
-如果使用 SSH 地址（git@github.com:user/repo.git），需要在 Acode 终端中生成密钥并添加到 GitHub：
+如果使用 SSH 地址（git@github.com:用户名/仓库名.git），需要在 Acode 终端中生成密钥并添加到 GitHub：
 
 ```bash
 ssh-keygen -t ed25519 -C "你的邮箱"
 ```
 
 然后将公钥（~/.ssh/id_ed25519.pub）的内容复制到 GitHub 的 SSH Keys 设置中。使用 SSH 前，请确认已按官方要求处理了 Dropbear/OpenSSH 的兼容性问题。
-
-### 常见问题提示
-
-· 提示“git not found”或插件无法工作：说明 Git 本体没有在 Acode 终端中正确安装，回到第一步执行 apk add git。
-· 认证失败：如果是 HTTPS，检查 Token 是否过期或权限不足；如果是 SSH，检查公钥是否正确添加到远程平台，以及 OpenSSH 环境是否就绪。GitHub 相关认证问题可以在插件设置中尝试重新连接或刷新缓存。
-· 仓库位置：建议将克隆的仓库放在共享存储目录（如 Downloads/git），而不是 ~/storage 根目录，以避免权限或路径问题；也可以创建目录后用软链接指向。
 
 ## 修改后推送顺序
 
