@@ -73,8 +73,8 @@ SSH Keys
    ```
 3. 配置全局身份（将引号内的信息替换为你的信息）：
    ```bash
-   git config --global user.name "Your Name"
-   git config --global user.email "email@example.com"
+   git config --global user.name "你的用户名"
+   git config --global user.email "你的邮箱"
    ```
    这两条命令是提交代码时的作者信息，必须配置，否则提交会失败。
 
@@ -101,7 +101,7 @@ Git 安装完成后，你可以在 Acode 终端中执行标准 Git 命令，这�
 克隆仓库
 
 ```bash
-git clone https://github.com/user/repo.git
+git clone https://github.com/用户名/仓库名.git
 ```
 
 如果是私有仓库，终端会提示你输入用户名和个人访问令牌（Token） （不是账号密码）。
@@ -153,7 +153,7 @@ git checkout main       # 切换回主分支
 如果使用 SSH 地址（git@github.com:user/repo.git），需要在 Acode 终端中生成密钥并添加到 GitHub：
 
 ```bash
-ssh-keygen -t ed25519 -C "your_email@example.com"
+ssh-keygen -t ed25519 -C "你的邮箱"
 ```
 
 然后将公钥（~/.ssh/id_ed25519.pub）的内容复制到 GitHub 的 SSH Keys 设置中。使用 SSH 前，请确认已按官方要求处理了 Dropbear/OpenSSH 的兼容性问题。
