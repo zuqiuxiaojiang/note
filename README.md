@@ -66,8 +66,6 @@ SSH Keys
 
 ### 第一步：准备 Git 环境（关键前提）
 
-Acode 的 Git SCM（v2）依赖系统 Git 二进制文件，所以第一步是在 Acode 的 Alpine Linux 终端中完成安装和身份配置。
-
 1. 打开 Acode 内置终端（Terminal）。
 2. 安装 Git，执行：
    ```bash
