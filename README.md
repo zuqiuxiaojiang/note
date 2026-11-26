@@ -158,7 +158,7 @@ ssh-keygen -t ed25519 -C "你的邮箱"
 
 然后将公钥（~/.ssh/id_ed25519.pub）的内容复制到 GitHub 的 SSH Keys 设置中。使用 SSH 前，请确认已按官方要求处理了 Dropbear/OpenSSH 的兼容性问题。
 
-## 修改后推送顺序
+## 修改文件后的推送顺序
 
 ### Acode的git scm插件
 
