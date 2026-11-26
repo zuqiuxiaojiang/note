@@ -163,3 +163,13 @@ ssh-keygen -t ed25519 -C "你的邮箱"
 · 提示“git not found”或插件无法工作：说明 Git 本体没有在 Acode 终端中正确安装，回到第一步执行 apk add git。
 · 认证失败：如果是 HTTPS，检查 Token 是否过期或权限不足；如果是 SSH，检查公钥是否正确添加到远程平台，以及 OpenSSH 环境是否就绪。GitHub 相关认证问题可以在插件设置中尝试重新连接或刷新缓存。
 · 仓库位置：建议将克隆的仓库放在共享存储目录（如 Downloads/git），而不是 ~/storage 根目录，以避免权限或路径问题；也可以创建目录后用软链接指向。
+
+## 修改后推送顺序
+
+### Acode的git scm插件
+
+Pull Commit Push
+
+### bige-editor
+
+暂存 提交 推送
